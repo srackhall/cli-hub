@@ -20,7 +20,7 @@ export default function App() {
         />
         <MainPanel
           selectedTool={selectedTool}
-          onLog={(entry) => setLogs((prev) => [...prev, entry])}
+          onLog={(entry) => setLogs((prev) => [...prev, entry as LogEntry])}
         />
       </div>
       <Console logs={logs} />
