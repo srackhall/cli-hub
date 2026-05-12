@@ -44,6 +44,15 @@ type SchemaProp struct {
 	} `json:"items,omitempty"`
 }
 
+// validateToolName checks that a tool name doesn't contain path separators
+// to prevent directory traversal attacks.
+func validateToolName(name string) bool {
+	if name == "" || strings.Contains(name, "/") || strings.Contains(name, "\\") {
+		return false
+	}
+	return filepath.Base(name) == name && name != "." && name != ".."
+}
+
 // StepGroup defines a group of fields for multi-step forms.
 type StepGroup struct {
 	Title  string   `json:"title"`

@@ -29,6 +29,9 @@ func (a *App) ListTools() []ToolInfo {
 
 // GetSchema returns the JSON Schema for a tool.
 func (a *App) GetSchema(name string) *ToolSchema {
+	if !validateToolName(name) {
+		return nil
+	}
 	toolPath := a.toolsDir + "/" + name
 	schema, err := getToolSchema(toolPath)
 	if err != nil {

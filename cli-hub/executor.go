@@ -5,6 +5,8 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"regexp"
+	"sync"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -17,8 +19,14 @@ type ExecuteResult struct {
 	Code   int    `json:"code"`
 }
 
+// validParamName matches CLI-safe parameter names (letters, digits, hyphens).
+var validParamName = regexp.MustCompile(`^[a-zA-Z][a-zA-Z0-9.-]*$`)
+
 // ExecuteTool runs a CLI tool with the given parameters and streams output.
 func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
+	if !validateToolName(name) {
+		return &ExecuteResult{Status: "error", Output: "invalid tool name", Code: -1}
+	}
 	toolPath := a.toolsDir + "/" + name
 
 	args := buildArgs(params)
@@ -35,8 +43,11 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 		return &ExecuteResult{Status: "error", Output: err.Error(), Code: -1}
 	}
 
-	// Stream stdout line by line
+	// Stream stdout and stderr, waiting for both to finish before returning.
+	var wg sync.WaitGroup
+	wg.Add(2)
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -47,8 +58,8 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 		}
 	}()
 
-	// Stream stderr line by line
 	go func() {
+		defer wg.Done()
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			line := scanner.Text()
@@ -60,6 +71,7 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 	}()
 
 	err := cmd.Wait()
+	wg.Wait()
 	if err != nil {
 		if exitErr, ok := err.(*exec.ExitError); ok {
 			code := exitErr.ExitCode()
@@ -80,6 +92,9 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 func buildArgs(params map[string]any) []string {
 	var args []string
 	for k, v := range params {
+		if !validParamName.MatchString(k) {
+			continue
+		}
 		switch val := v.(type) {
 		case bool:
 			if val {
