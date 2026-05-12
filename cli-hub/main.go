@@ -17,6 +17,26 @@ import (
 //go:embed all:frontend/dist
 var assets embed.FS
 
+// App represents the Wails application with bindings.
+type App struct {
+	toolsDir string
+}
+
+// ListTools scans and returns all available CLI tools.
+func (a *App) ListTools() []ToolInfo {
+	return ScanTools(a.toolsDir)
+}
+
+// GetSchema returns the JSON Schema for a tool.
+func (a *App) GetSchema(name string) *ToolSchema {
+	toolPath := a.toolsDir + "/" + name
+	schema, err := getToolSchema(toolPath)
+	if err != nil {
+		return nil
+	}
+	return schema
+}
+
 func init() {
 	// Register a custom event whose associated data type is string.
 	// This is not required, but the binding generator will pick up registered events
@@ -29,15 +49,20 @@ func init() {
 // logs any error that might occur.
 func main() {
 
+	app := &App{
+		toolsDir: "./tools",
+	}
+
 	// Create a new Wails application by providing the necessary options.
 	// Variables 'Name' and 'Description' are for application metadata.
 	// 'Assets' configures the asset server with the 'FS' variable pointing to the frontend files.
-	// 'Bind' is a list of Go struct instances. The frontend has access to the methods of these instances.
+	// 'Services' registers Go struct instances. The frontend has access to the methods of these instances.
 	// 'Mac' options tailor the application when running an macOS.
-	app := application.New(application.Options{
-		Name:        "cli-hub",
-		Description: "A demo of using raw HTML & CSS",
+	wailsApp := application.New(application.Options{
+		Name:        "CLI Hub",
+		Description: "A desktop CLI tool hub",
 		Services: []application.Service{
+			application.NewService(app),
 			application.NewService(&GreetService{}),
 		},
 		Assets: application.AssetOptions{
@@ -53,8 +78,8 @@ func main() {
 	// 'Mac' options tailor the window when running on macOS.
 	// 'BackgroundColour' is the background colour of the window.
 	// 'URL' is the URL that will be loaded into the webview.
-	app.Window.NewWithOptions(application.WebviewWindowOptions{
-		Title: "Window 1",
+	wailsApp.Window.NewWithOptions(application.WebviewWindowOptions{
+		Title: "CLI Hub",
 		Mac: application.MacWindow{
 			InvisibleTitleBarHeight: 50,
 			Backdrop:                application.MacBackdropTranslucent,
@@ -69,13 +94,13 @@ func main() {
 	go func() {
 		for {
 			now := time.Now().Format(time.RFC1123)
-			app.Event.Emit("time", now)
+			wailsApp.Event.Emit("time", now)
 			time.Sleep(time.Second)
 		}
 	}()
 
 	// Run the application. This blocks until the application has been exited.
-	err := app.Run()
+	err := wailsApp.Run()
 
 	// If an error occurred while running the application, log it and exit.
 	if err != nil {
