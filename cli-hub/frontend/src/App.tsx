@@ -13,8 +13,6 @@ import * as WailsApp from "@bindings/changeme/app"
 import type { ToolInfo, LogEntry } from "@/types"
 import "@/i18n"
 
-const IS_MOCK = typeof window !== "undefined" && !("go" in window)
-
 type Page = "tools" | "settings"
 
 export default function App() {
@@ -25,15 +23,6 @@ export default function App() {
   const [logs, setLogs] = useState<LogEntry[]>([])
 
   const loadTools = () => {
-    if (IS_MOCK) {
-      import("@/mock").then(({ MOCK_TOOLS }) => {
-        setTools(MOCK_TOOLS)
-        if (!selectedTool || !MOCK_TOOLS.find((t: ToolInfo) => t.name === selectedTool)) {
-          setSelectedTool(MOCK_TOOLS[0]?.name ?? null)
-        }
-      })
-      return
-    }
     let cancelled = false
     async function load() {
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -76,26 +65,26 @@ export default function App() {
   }
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col h-screen min-w-[480px]">
       {/* Top bar */}
-      <div className="h-9 border-b flex items-center justify-between px-3 bg-muted/20">
-        <div className="flex items-center gap-1">
+      <div className="h-9 border-b flex items-center justify-between px-2 md:px-3 bg-muted/20 shrink-0">
+        <div className="flex items-center gap-0.5 md:gap-1">
           <Button
             variant={page === "tools" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("tools")}
-            className="h-7 text-xs"
+            className="h-7 text-xs px-2"
           >
-            <Wrench className="h-3.5 w-3.5 mr-1" />
+            <Wrench className="h-3.5 w-3.5 mr-1 hidden sm:inline" />
             {t("nav.tools")}
           </Button>
           <Button
             variant={page === "settings" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("settings")}
-            className="h-7 text-xs"
+            className="h-7 text-xs px-2"
           >
-            <SettingsIcon className="h-3.5 w-3.5 mr-1" />
+            <SettingsIcon className="h-3.5 w-3.5 mr-1 hidden sm:inline" />
             {t("nav.settings")}
           </Button>
         </div>
@@ -105,11 +94,12 @@ export default function App() {
       {/* Main content */}
       {page === "tools" ? (
         <>
-          <div className="flex flex-1 overflow-hidden">
+          <div className="flex flex-1 overflow-hidden min-h-0">
             <Sidebar
               tools={tools}
               selectedTool={selectedTool}
               onSelectTool={setSelectedTool}
+              onRefreshTools={handleRefreshTools}
             />
             <MainPanel
               selectedTool={selectedTool}
@@ -120,7 +110,7 @@ export default function App() {
           <StatusBar toolCount={tools.length} readyCount={tools.filter((t) => t.ready).length} />
         </>
       ) : (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden min-h-0">
           <Settings onRefreshTools={handleRefreshTools} />
         </div>
       )}

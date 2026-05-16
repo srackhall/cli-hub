@@ -8,8 +8,6 @@ import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolSchema } from "@/types"
 
-const IS_MOCK = typeof window !== "undefined" && !("go" in window)
-
 interface MainPanelProps {
   selectedTool: string | null
   onLog: (entry: { stream: string; text: string; ts: number }) => void
@@ -33,13 +31,6 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     }
 
     async function load() {
-      if (IS_MOCK) {
-        const { MOCK_SCHEMAS } = await import("@/mock")
-        setSchema(MOCK_SCHEMAS[selectedTool!] ?? null)
-        setValues({})
-        setCurrentStep(0)
-        return
-      }
       try {
         const s = await WailsApp.GetSchema(selectedTool ?? "")
         if (s) {
@@ -70,17 +61,6 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setRunning(true)
     onLog({ stream: "stdout", text: t("console.starting", { tool: selectedTool }), ts: Date.now() })
     try {
-      if (IS_MOCK) {
-        const { mockExecuteTool } = await import("@/mock")
-        const result = await mockExecuteTool(selectedTool, values, onLog)
-        if (result && result.code === 0) {
-          onLog({ stream: "stdout", text: t("console.success", { output: result.output }), ts: Date.now() })
-        } else if (result) {
-          onLog({ stream: "stderr", text: t("console.errorCode", { code: result.code, output: result.output }), ts: Date.now() })
-        }
-        setRunning(false)
-        return
-      }
       const result = await WailsApp.ExecuteTool(selectedTool ?? "", values)
       if (result && result.code === 0) {
         onLog({ stream: "stdout", text: t("console.success", { output: result.output }), ts: Date.now() })
@@ -105,7 +85,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   if (!selectedTool) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p>{t("app.selectTool")}</p>
+        <p className="text-sm md:text-base text-center px-4">{t("app.selectTool")}</p>
       </div>
     )
   }
@@ -119,24 +99,24 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   }
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="flex-1 flex flex-col overflow-hidden min-w-0">
       {/* Header */}
-      <div className="px-6 py-4 border-b">
-        <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{toolTitle}</h2>
-          <Badge variant="secondary">{selectedTool}</Badge>
+      <div className="px-4 md:px-6 py-3 md:py-4 border-b shrink-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h2 className="text-base md:text-lg font-semibold truncate">{toolTitle}</h2>
+          <Badge variant="secondary" className="shrink-0">{selectedTool}</Badge>
         </div>
         {toolDesc && (
-          <p className="text-sm text-muted-foreground mt-1">{toolDesc}</p>
+          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{toolDesc}</p>
         )}
         {toolLongDesc && (
-          <p className="text-xs text-muted-foreground/70 mt-2 leading-relaxed whitespace-pre-wrap">{toolLongDesc}</p>
+          <p className="text-[10px] md:text-xs text-muted-foreground/70 mt-1.5 leading-relaxed whitespace-pre-wrap line-clamp-4">{toolLongDesc}</p>
         )}
       </div>
 
       {/* Step indicator */}
       {steps && steps.length > 1 && (
-        <div className="px-6 py-2 border-b flex items-center gap-2 text-sm">
+        <div className="px-4 md:px-6 py-1.5 md:py-2 border-b flex items-center gap-1.5 md:gap-2 text-xs md:text-sm shrink-0 flex-wrap">
           {steps.map((step, idx) => (
             <div key={idx} className="flex items-center gap-1">
               {idx > 0 && <span className="text-muted-foreground">/</span>}
@@ -157,7 +137,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       )}
 
       {/* Form body */}
-      <div className="flex-1 overflow-auto px-6 py-4">
+      <div className="flex-1 overflow-auto px-4 md:px-6 py-3 md:py-4 min-h-0">
         {schema && (
           <DynamicForm
             schema={{
@@ -175,8 +155,8 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       </div>
 
       {/* Action bar */}
-      <div className="px-6 py-3 border-t flex items-center justify-between">
-        <div className="flex gap-2">
+      <div className="px-4 md:px-6 py-2 md:py-3 border-t flex items-center justify-between shrink-0">
+        <div className="flex gap-1.5 md:gap-2">
           {steps && currentStep > 0 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s - 1)}>
               <ChevronLeft className="h-4 w-4 mr-1" /> {t("mainPanel.previous")}
@@ -188,7 +168,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
             </Button>
           )}
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 md:gap-2">
           <Button variant="ghost" size="sm" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-1" /> {t("mainPanel.reset")}
           </Button>

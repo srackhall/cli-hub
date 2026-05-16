@@ -9,9 +9,12 @@
   },
   "sidebar": {
     "search": "搜索工具...",
-    "noTools": "没有找到工具",
+    "noTools": "还没有导入工具，请使用 + 按钮导入 CLI 工具二进制文件。",
     "noMatches": "没有匹配结果",
-    "errBadge": "错误"
+    "errBadge": "错误",
+    "import": "导入",
+    "delete": "删除工具",
+    "deleteConfirm": "确定要从 CLI Hub 中移除 {{name}} 吗？这只会删除工具目录中的副本。"
   },
   "mainPanel": {
     "loading": "加载中...",

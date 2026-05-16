@@ -2,7 +2,11 @@ package main
 
 import (
 	"embed"
+	"fmt"
+	"io"
 	"log"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -47,6 +51,45 @@ func (a *App) GetSettings() AppSettings {
 // UpdateSettings persists new application settings and creates cli dir if needed.
 func (a *App) UpdateSettings(newSettings AppSettings) {
 	a.settings.Update(newSettings)
+}
+
+// ImportTool copies a CLI binary from sourcePath into the tools directory.
+func (a *App) ImportTool(sourcePath string) error {
+	toolsDir := a.settings.GetToolsDir()
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		return fmt.Errorf("failed to create tools directory: %w", err)
+	}
+
+	src, err := os.Open(sourcePath)
+	if err != nil {
+		return fmt.Errorf("failed to open source: %w", err)
+	}
+	defer src.Close()
+
+	baseName := filepath.Base(sourcePath)
+	destPath := filepath.Join(toolsDir, baseName)
+
+	dst, err := os.OpenFile(destPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0755)
+	if err != nil {
+		return fmt.Errorf("failed to create destination: %w", err)
+	}
+	defer dst.Close()
+
+	if _, err := io.Copy(dst, src); err != nil {
+		os.Remove(destPath)
+		return fmt.Errorf("failed to copy file: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteTool removes a CLI tool binary from the tools directory.
+func (a *App) DeleteTool(name string) error {
+	if !validateToolName(name) {
+		return fmt.Errorf("invalid tool name")
+	}
+	toolPath := filepath.Join(a.settings.GetToolsDir(), name)
+	return os.Remove(toolPath)
 }
 
 func init() {

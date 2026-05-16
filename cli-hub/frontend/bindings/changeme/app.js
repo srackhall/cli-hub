@@ -16,6 +16,15 @@ import { Call as $Call, CancellablePromise as $CancellablePromise, Create as $Cr
 import * as $models from "./models.js";
 
 /**
+ * DeleteTool removes a CLI tool binary from the tools directory.
+ * @param {string} name
+ * @returns {$CancellablePromise<void>}
+ */
+export function DeleteTool(name) {
+    return $Call.ByID(2696011852, name);
+}
+
+/**
  * ExecuteTool runs a CLI tool with the given parameters and streams output.
  * @param {string} name
  * @param {{ [_ in string]?: any }} params
@@ -46,6 +55,15 @@ export function GetSettings() {
     return $Call.ByID(2554697378).then(/** @type {($result: any) => any} */(($result) => {
         return $$createType4($result);
     }));
+}
+
+/**
+ * ImportTool copies a CLI binary from sourcePath into the tools directory.
+ * @param {string} sourcePath
+ * @returns {$CancellablePromise<void>}
+ */
+export function ImportTool(sourcePath) {
+    return $Call.ByID(1277206998, sourcePath);
 }
 
 /**

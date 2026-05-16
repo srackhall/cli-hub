@@ -9,9 +9,12 @@
   },
   "sidebar": {
     "search": "Search tools...",
-    "noTools": "No tools found",
+    "noTools": "No tools imported yet. Use the + button to import a CLI tool binary.",
     "noMatches": "No matches",
-    "errBadge": "Err"
+    "errBadge": "Err",
+    "import": "Import",
+    "delete": "Delete tool",
+    "deleteConfirm": "Remove {{name}} from CLI Hub? This only removes the copy in the tools directory."
   },
   "mainPanel": {
     "loading": "Loading...",

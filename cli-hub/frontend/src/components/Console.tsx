@@ -17,7 +17,7 @@ export function Console({ logs }: ConsoleProps) {
   }, [logs])
 
   return (
-    <div ref={ref} className="h-40 border-t overflow-auto bg-black text-green-400 font-mono text-xs p-3">
+    <div ref={ref} className="h-32 sm:h-40 md:h-44 lg:h-48 border-t overflow-auto bg-black text-green-400 font-mono text-[10px] md:text-xs p-2 md:p-3 shrink-0">
       {logs.length === 0 && (
         <p className="text-green-700">{t("console.ready")}</p>
       )}
