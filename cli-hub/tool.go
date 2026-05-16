@@ -13,33 +13,41 @@ import (
 
 // ToolInfo represents a discovered CLI tool.
 type ToolInfo struct {
-	Name        string `json:"name"`
-	Version     string `json:"version"`
-	Description string `json:"description"`
-	Ready       bool   `json:"ready"`
-	Error       string `json:"error,omitempty"`
+	Name             string `json:"name"`
+	Version          string `json:"version"`
+	Description      string `json:"description"`
+	DescriptionZh    string `json:"descriptionZh,omitempty"`
+	LongDescription  string `json:"longDescription,omitempty"`
+	LongDescriptionZh string `json:"longDescriptionZh,omitempty"`
+	Ready            bool   `json:"ready"`
+	Error            string `json:"error,omitempty"`
 }
 
 // ToolSchema represents the parsed --schema output of a CLI tool.
 type ToolSchema struct {
-	Title       string                `json:"title"`
-	Description string                `json:"description"`
-	Type        string                `json:"type"`
-	Properties  map[string]SchemaProp `json:"properties"`
-	Required    []string              `json:"required"`
-	XSteps      []StepGroup           `json:"x-steps,omitempty"`
+	Title            string                `json:"title"`
+	TitleZh          string                `json:"titleZh,omitempty"`
+	Description      string                `json:"description"`
+	DescriptionZh    string                `json:"descriptionZh,omitempty"`
+	LongDescription  string                `json:"longDescription,omitempty"`
+	LongDescriptionZh string               `json:"longDescriptionZh,omitempty"`
+	Type             string                `json:"type"`
+	Properties       map[string]SchemaProp `json:"properties"`
+	Required         []string              `json:"required"`
+	XSteps           []StepGroup           `json:"x-steps,omitempty"`
 }
 
 // SchemaProp describes a single parameter.
 type SchemaProp struct {
-	Type        string   `json:"type"`
-	Description string   `json:"description"`
-	Default     any      `json:"default,omitempty"`
-	Enum        []string `json:"enum,omitempty"`
-	Format      string   `json:"format,omitempty"`
-	Minimum     *float64 `json:"minimum,omitempty"`
-	Maximum     *float64 `json:"maximum,omitempty"`
-	Items       *struct {
+	Type          string   `json:"type"`
+	Description   string   `json:"description"`
+	DescriptionZh string   `json:"descriptionZh,omitempty"`
+	Default       any      `json:"default,omitempty"`
+	Enum          []string `json:"enum,omitempty"`
+	Format        string   `json:"format,omitempty"`
+	Minimum       *float64 `json:"minimum,omitempty"`
+	Maximum       *float64 `json:"maximum,omitempty"`
+	Items         *struct {
 		Type string `json:"type"`
 	} `json:"items,omitempty"`
 }
@@ -55,8 +63,9 @@ func validateToolName(name string) bool {
 
 // StepGroup defines a group of fields for multi-step forms.
 type StepGroup struct {
-	Title  string   `json:"title"`
-	Fields []string `json:"fields"`
+	Title   string   `json:"title"`
+	TitleZh string   `json:"titleZh,omitempty"`
+	Fields  []string `json:"fields"`
 }
 
 // ScanTools scans the tools/ directory for executable binaries
@@ -98,6 +107,9 @@ func ScanTools(toolsDir string) []ToolInfo {
 			tool.Error = serr.Error()
 		} else {
 			tool.Description = schema.Description
+			tool.DescriptionZh = schema.DescriptionZh
+			tool.LongDescription = schema.LongDescription
+			tool.LongDescriptionZh = schema.LongDescriptionZh
 			tool.Ready = true
 		}
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { HelpTooltip } from "@/components/HelpTooltip"
+import { useLocale } from "@/hooks/useLocale"
 import { Plus, Trash2 } from "lucide-react"
 import type { ToolSchema, SchemaProp } from "@/types"
 
@@ -50,7 +51,8 @@ function FormField({
   onChange: (v: unknown) => void
 }) {
   const { t } = useTranslation()
-  const label = prop.description ?? name
+  const { text } = useLocale()
+  const label = text(prop.description, prop.descriptionZh) ?? name
 
   // Boolean -> Checkbox
   if (prop.type === "boolean") {
@@ -64,7 +66,7 @@ function FormField({
         <Label htmlFor={name} className="cursor-pointer">
           {label}
         </Label>
-        <HelpTooltip paramKey={name} description={prop.description} />
+        <HelpTooltip paramKey={name} description={label} />
       </div>
     )
   }
@@ -75,7 +77,7 @@ function FormField({
       <div className="space-y-1.5">
         <div className="flex items-center gap-1">
           <Label htmlFor={name}>{label}</Label>
-          <HelpTooltip paramKey={name} description={prop.description} />
+          <HelpTooltip paramKey={name} description={label} />
         </div>
         <Select
           value={(value as string) ?? (prop.default as string) ?? ""}
@@ -103,7 +105,7 @@ function FormField({
       <div className="space-y-1.5">
         <div className="flex items-center gap-1">
           <Label htmlFor={name}>{label}</Label>
-          <HelpTooltip paramKey={name} description={prop.description} />
+          <HelpTooltip paramKey={name} description={label} />
         </div>
         <Input
           id={name}
@@ -127,7 +129,7 @@ function FormField({
       <div className="space-y-1.5">
         <div className="flex items-center gap-1">
           <Label>{label}</Label>
-          <HelpTooltip paramKey={name} description={prop.description} />
+          <HelpTooltip paramKey={name} description={label} />
         </div>
         <div className="space-y-2">
           {items.map((item, idx) => (
@@ -169,7 +171,7 @@ function FormField({
     <div className="space-y-1.5">
       <div className="flex items-center gap-1">
         <Label htmlFor={name}>{label}</Label>
-        <HelpTooltip paramKey={name} description={prop.description} />
+        <HelpTooltip paramKey={name} description={label} />
       </div>
       <Input
         id={name}

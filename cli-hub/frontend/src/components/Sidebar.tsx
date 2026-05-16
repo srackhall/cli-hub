@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Search, Box } from "lucide-react"
+import { useLocale } from "@/hooks/useLocale"
 import type { ToolInfo } from "@/types"
 
 interface SidebarProps {
@@ -14,6 +15,7 @@ interface SidebarProps {
 
 export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
   const { t } = useTranslation()
+  const { text } = useLocale()
   const [search, setSearch] = useState("")
 
   const filtered = tools.filter((t) =>
@@ -35,7 +37,9 @@ export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
       </div>
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-1">
-          {filtered.map((tool) => (
+          {filtered.map((tool) => {
+            const desc = text(tool.description, tool.descriptionZh)
+            return (
             <button
               key={tool.name}
               onClick={() => onSelectTool(tool.name)}
@@ -48,19 +52,19 @@ export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
               <Box className="h-4 w-4 shrink-0 text-muted-foreground" />
               <div className="truncate flex-1 min-w-0">
                 <div className="truncate text-sm font-medium">{tool.name}</div>
-                {tool.description && (
+                {desc && (
                   <div className="truncate text-[11px] text-muted-foreground mt-0.5">
-                    {tool.description}
+                    {desc}
                   </div>
                 )}
               </div>
               {!tool.ready && (
                 <Badge variant="destructive" className="ml-auto shrink-0 text-[10px] px-1.5 py-0">
-                  Err
+                  {t("sidebar.errBadge")}
                 </Badge>
               )}
             </button>
-          ))}
+          )})}
           {filtered.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
               {tools.length === 0 ? t("sidebar.noTools") : t("sidebar.noMatches")}

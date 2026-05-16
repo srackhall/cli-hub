@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DynamicForm } from "@/components/DynamicForm"
+import { useLocale } from "@/hooks/useLocale"
 import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolSchema } from "@/types"
@@ -16,6 +17,7 @@ interface MainPanelProps {
 
 export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   const { t } = useTranslation()
+  const { text } = useLocale()
   const [schema, setSchema] = useState<ToolSchema | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [currentStep, setCurrentStep] = useState(0)
@@ -56,7 +58,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     if (!schema?.properties) return null
     const xsteps = schema["x-steps"]
     if (!xsteps || xsteps.length === 0) {
-      return [{ title: t("mainPanel.parameters"), fields: Object.keys(schema.properties) }]
+      return [{ title: t("mainPanel.parameters"), titleZh: undefined, fields: Object.keys(schema.properties) }]
     }
     return xsteps
   }, [schema])
@@ -96,6 +98,10 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setCurrentStep(0)
   }
 
+  const toolTitle = text(schema?.title, schema?.titleZh) ?? selectedTool
+  const toolDesc = text(schema?.description, schema?.descriptionZh)
+  const toolLongDesc = text(schema?.longDescription, schema?.longDescriptionZh)
+
   if (!selectedTool) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
@@ -117,11 +123,14 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       {/* Header */}
       <div className="px-6 py-4 border-b">
         <div className="flex items-center gap-2">
-          <h2 className="text-lg font-semibold">{schema.title ?? selectedTool}</h2>
+          <h2 className="text-lg font-semibold">{toolTitle}</h2>
           <Badge variant="secondary">{selectedTool}</Badge>
         </div>
-        {schema.description && (
-          <p className="text-sm text-muted-foreground mt-1">{schema.description}</p>
+        {toolDesc && (
+          <p className="text-sm text-muted-foreground mt-1">{toolDesc}</p>
+        )}
+        {toolLongDesc && (
+          <p className="text-xs text-muted-foreground/70 mt-2 leading-relaxed whitespace-pre-wrap">{toolLongDesc}</p>
         )}
       </div>
 
@@ -140,7 +149,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
                     : "text-muted-foreground/50"
                 }`}
               >
-                {step.title}
+                {text(step.title, step.titleZh)}
               </span>
             </div>
           ))}

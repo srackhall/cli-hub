@@ -18,12 +18,24 @@ Output valid JSON Schema describing all parameters. The JSON output MUST include
 ```json
 {
   "title": "Tool Display Name",
-  "description": "What this tool does",
+  "titleZh": "工具中文名称",
+  "description": "What this tool does (one line, English)",
+  "descriptionZh": "该工具的功能说明（一行，中文）",
+  "longDescription": "Detailed explanation of usage, features, and caveats (multi-line, English)",
+  "longDescriptionZh": "详细的用途、功能和注意事项说明（多行，中文）",
   "type": "object",
   "properties": { ... },
   "required": ["param1"]
 }
 ```
+
+**Bilingual field rules:**
+- `title` and `titleZh` — Tool display name in English and Chinese. Both required.
+- `description` and `descriptionZh` — One-line summary in each language. Both required.
+- `longDescription` and `longDescriptionZh` — Detailed multi-line documentation. Recommended for non-trivial tools.
+- Parameter `description` and `descriptionZh` in each property — Label shown in the form UI. Both required.
+- Step `title` and `titleZh` in x-steps — Step name in the wizard. Both required when using x-steps.
+- CLI parameters themselves remain English-only (flag names) — i18n is display-only, not functional.
 
 Property type to UI component mapping:
 
@@ -41,7 +53,8 @@ Each property object:
 ```json
 {
   "type": "string",
-  "description": "Human-readable label shown in UI",
+  "description": "Human-readable label shown in UI (English)",
+  "descriptionZh": "UI 显示的中文标签",
   "default": "optional default value",
   "enum": ["a", "b"],
   "format": "file-path",
@@ -50,6 +63,8 @@ Each property object:
 }
 ```
 
+**Parameter naming:** Use English kebab-case for flag names (e.g. `input-file`, `output-dir`). The `description` fields provide the i18n layer — CLI Hub displays them in the current language. The CLI itself only sees English flags at runtime.
+
 ### Multi-step Support (x-steps)
 
 Use the `x-steps` extension to group parameters into sequential wizard steps:
@@ -57,13 +72,13 @@ Use the `x-steps` extension to group parameters into sequential wizard steps:
 ```json
 {
   "x-steps": [
-    { "title": "Step 1: Select Files", "fields": ["input-files", "output-dir"] },
-    { "title": "Step 2: Options", "fields": ["mode", "verbose"] }
+    { "title": "Step 1: Select Files", "titleZh": "步骤 1：选择文件", "fields": ["input-files", "output-dir"] },
+    { "title": "Step 2: Options", "titleZh": "步骤 2：选项", "fields": ["mode", "verbose"] }
   ]
 }
 ```
 
-- Each step has a `title` and `fields` (array of property names)
+- Each step has `title` (English), `titleZh` (Chinese), and `fields` (array of property names)
 - Every property in `fields` MUST exist in `properties`
 - Fields not listed in any step are hidden in the UI
 - CLI receives all parameters at once; steps are pure frontend behavior
@@ -130,19 +145,25 @@ func main() {
 
 func outputSchema() {
 	schema := map[string]interface{}{
-		"title":       "Tool Name",
-		"description": "Brief description of what this tool does.",
-		"type":        "object",
+		"title":              "Tool Name",
+		"titleZh":            "工具名称",
+		"description":        "Brief description of what this tool does.",
+		"descriptionZh":      "该工具功能的简要说明。",
+		"longDescription":    "Detailed explanation of usage, features, and caveats.\nSupports multi-line text.",
+		"longDescriptionZh":  "详细的用途、功能和注意事项说明。\n支持多行文本。",
+		"type":               "object",
 		"properties": map[string]interface{}{
 			"input-file": map[string]interface{}{
-				"type":        "string",
-				"description": "Path to the input file",
-				"format":      "file-path",
+				"type":          "string",
+				"description":   "Path to the input file",
+				"descriptionZh": "输入文件的路径",
+				"format":        "file-path",
 			},
 			"output-dir": map[string]interface{}{
-				"type":        "string",
-				"description": "Output directory",
-				"format":      "directory-path",
+				"type":          "string",
+				"description":   "Output directory",
+				"descriptionZh": "输出目录",
+				"format":        "directory-path",
 			},
 		},
 		"required": []string{"input-file"},
