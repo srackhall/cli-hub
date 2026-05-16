@@ -1,0 +1,58 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - textbox "Search tools..." [ref=e11]
+      - generic [ref=e13]:
+        - button "xlsx-merge" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: xlsx-merge
+        - button "csv-clean" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+          - generic [ref=e23]: csv-clean
+        - button "report-gen Err" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+          - generic: report-gen
+          - generic [ref=e28]: Err
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "XLSX Merge" [level=2] [ref=e32]
+          - generic [ref=e33]: xlsx-merge
+        - paragraph [ref=e34]: Merge multiple Excel files into a single workbook.
+      - generic [ref=e35]:
+        - generic [ref=e37]: Select Files
+        - generic [ref=e38]:
+          - generic [ref=e39]: /
+          - generic [ref=e40]: Merge Options
+      - generic [ref=e42]:
+        - generic [ref=e69]:
+          - text: How to merge sheets
+          - combobox "How to merge sheets" [ref=e70] [cursor=pointer]:
+            - generic: by-row
+            - img [ref=e71]
+        - generic [ref=e73]:
+          - checkbox "Skip empty rows during merge" [ref=e74] [cursor=pointer]
+          - generic [ref=e75] [cursor=pointer]: Skip empty rows during merge
+        - generic [ref=e76]:
+          - text: Target sheet name for merged data
+          - textbox "Target sheet name for merged data" [ref=e77]:
+            - /placeholder: ""
+            - text: Sheet1
+        - generic [ref=e78]:
+          - text: Maximum rows to process per file
+          - spinbutton "Maximum rows to process per file" [ref=e79]
+      - generic [ref=e49]:
+        - button "Previous" [ref=e80] [cursor=pointer]: Previous
+        - generic [ref=e54]:
+          - button "Reset" [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+            - text: Reset
+          - button "Execute" [ref=e59] [cursor=pointer]: Execute
+  - paragraph [ref=e62]: Ready. Select a tool and click Execute to begin.
+  - generic [ref=e63]:
+    - generic [ref=e64]: tools/ (3 tools)
+    - generic [ref=e65]:
+      - img [ref=e66]
+      - generic [ref=e68]: 2/3 Ready

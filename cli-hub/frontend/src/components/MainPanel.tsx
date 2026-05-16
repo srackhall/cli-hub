@@ -6,6 +6,8 @@ import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolSchema } from "@/types"
 
+const IS_MOCK = typeof window !== "undefined" && !("go" in window)
+
 interface MainPanelProps {
   selectedTool: string | null
   onLog: (entry: { stream: string; text: string; ts: number }) => void
@@ -27,10 +29,17 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     }
 
     async function load() {
+      if (IS_MOCK) {
+        const { MOCK_SCHEMAS } = await import("@/mock")
+        setSchema(MOCK_SCHEMAS[selectedTool!] ?? null)
+        setValues({})
+        setCurrentStep(0)
+        return
+      }
       try {
         const s = await WailsApp.GetSchema(selectedTool ?? "")
         if (s) {
-          setSchema(s as unknown as ToolSchema)
+          setSchema(s as ToolSchema)
         }
         setValues({})
         setCurrentStep(0)
@@ -57,6 +66,17 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setRunning(true)
     onLog({ stream: "stdout", text: `Starting ${selectedTool}...`, ts: Date.now() })
     try {
+      if (IS_MOCK) {
+        const { mockExecuteTool } = await import("@/mock")
+        const result = await mockExecuteTool(selectedTool, values, onLog)
+        if (result && result.code === 0) {
+          onLog({ stream: "stdout", text: `SUCCESS (${result.output})`, ts: Date.now() })
+        } else if (result) {
+          onLog({ stream: "stderr", text: `ERROR [code ${result.code}]: ${result.output}`, ts: Date.now() })
+        }
+        setRunning(false)
+        return
+      }
       const result = await WailsApp.ExecuteTool(selectedTool ?? "", values)
       if (result && result.code === 0) {
         onLog({ stream: "stdout", text: `SUCCESS (${result.output})`, ts: Date.now() })

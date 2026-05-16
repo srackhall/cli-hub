@@ -1,0 +1,72 @@
+name: Build CLI Hub
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
+
+      - name: Build macOS (arm64)
+        run: |
+          export PATH="$HOME/go/bin:$PATH"
+          wails3 build
+
+      - name: Package macOS .app bundle
+        run: |
+          export PATH="$HOME/go/bin:$PATH"
+          wails3 task darwin:package
+
+      - name: Upload macOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-hub-macos-arm64
+          path: |
+            bin/cli-hub
+            bin/cli-hub.app/**/*
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.25"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
+
+      - name: Build Windows (amd64)
+        run: wails3 build
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-hub-windows-amd64
+          path: bin/cli-hub.exe

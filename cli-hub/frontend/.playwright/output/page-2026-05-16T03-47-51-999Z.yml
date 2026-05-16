@@ -1,0 +1,53 @@
+- generic [ref=e3]:
+  - generic [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - textbox "Search tools..." [ref=e11]
+      - generic [ref=e13]:
+        - button "xlsx-merge" [ref=e14] [cursor=pointer]:
+          - img [ref=e15]
+          - generic [ref=e18]: xlsx-merge
+        - button "csv-clean" [ref=e19] [cursor=pointer]:
+          - img [ref=e20]
+          - generic [ref=e23]: csv-clean
+        - button "report-gen Err" [ref=e24] [cursor=pointer]:
+          - img [ref=e25]
+          - generic: report-gen
+          - generic [ref=e28]: Err
+    - generic [ref=e29]:
+      - generic [ref=e30]:
+        - generic [ref=e31]:
+          - heading "XLSX Merge" [level=2] [ref=e32]
+          - generic [ref=e33]: xlsx-merge
+        - paragraph [ref=e34]: Merge multiple Excel files into a single workbook.
+      - generic [ref=e35]:
+        - generic [ref=e37]: Select Files
+        - generic [ref=e38]:
+          - generic [ref=e39]: /
+          - generic [ref=e40]: Merge Options
+      - generic [ref=e42]:
+        - generic [ref=e43]:
+          - text: Input .xlsx files to merge
+          - button "Add" [ref=e45] [cursor=pointer]:
+            - img [ref=e46]
+            - text: Add
+        - generic [ref=e47]:
+          - text: Output directory for merged file
+          - textbox "Output directory for merged file" [ref=e48]:
+            - /placeholder: /path/to/dir
+      - generic [ref=e49]:
+        - button "Next" [ref=e51] [cursor=pointer]:
+          - text: Next
+          - img [ref=e52]
+        - generic [ref=e54]:
+          - button "Reset" [ref=e55] [cursor=pointer]:
+            - img [ref=e56]
+            - text: Reset
+          - button "Execute" [ref=e59] [cursor=pointer]: Execute
+  - paragraph [ref=e62]: Ready. Select a tool and click Execute to begin.
+  - generic [ref=e63]:
+    - generic [ref=e64]: tools/ (3 tools)
+    - generic [ref=e65]:
+      - img [ref=e66]
+      - generic [ref=e68]: 2/3 Ready
