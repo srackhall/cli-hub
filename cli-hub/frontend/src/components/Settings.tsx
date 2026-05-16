@@ -54,7 +54,7 @@ export function Settings({ onRefreshTools }: SettingsProps) {
           </div>
         </div>
 
-        <Button onClick={handleSave} size="sm" className="bg-[#007AFF] hover:bg-[#0066D6] text-white font-medium">
+        <Button onClick={handleSave} size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground font-medium">
           <Save className="h-4 w-4 mr-1.5" />
           {saved ? t("settings.saved") : t("settings.save")}
         </Button>
