@@ -27,7 +27,7 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 	if !validateToolName(name) {
 		return &ExecuteResult{Status: "error", Output: "invalid tool name", Code: -1}
 	}
-	toolPath := a.toolsDir + "/" + name
+	toolPath := a.settings.GetToolsDir() + "/" + name
 
 	args := buildArgs(params)
 

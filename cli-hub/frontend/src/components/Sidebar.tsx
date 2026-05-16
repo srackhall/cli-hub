@@ -1,4 +1,5 @@
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -12,6 +13,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState("")
 
   const filtered = tools.filter((t) =>
@@ -24,7 +26,7 @@ export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search tools..."
+            placeholder={t("sidebar.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-sm"
@@ -44,7 +46,14 @@ export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
               }`}
             >
               <Box className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">{tool.name}</span>
+              <div className="truncate flex-1 min-w-0">
+                <div className="truncate text-sm font-medium">{tool.name}</div>
+                {tool.description && (
+                  <div className="truncate text-[11px] text-muted-foreground mt-0.5">
+                    {tool.description}
+                  </div>
+                )}
+              </div>
               {!tool.ready && (
                 <Badge variant="destructive" className="ml-auto shrink-0 text-[10px] px-1.5 py-0">
                   Err
@@ -54,7 +63,7 @@ export function Sidebar({ tools, selectedTool, onSelectTool }: SidebarProps) {
           ))}
           {filtered.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-8">
-              {tools.length === 0 ? "No tools found" : "No matches"}
+              {tools.length === 0 ? t("sidebar.noTools") : t("sidebar.noMatches")}
             </p>
           )}
         </div>

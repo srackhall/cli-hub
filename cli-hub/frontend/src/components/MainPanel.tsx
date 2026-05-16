@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from "react"
+import { useTranslation } from "react-i18next"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DynamicForm } from "@/components/DynamicForm"
@@ -14,6 +15,7 @@ interface MainPanelProps {
 }
 
 export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
+  const { t } = useTranslation()
   const [schema, setSchema] = useState<ToolSchema | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [currentStep, setCurrentStep] = useState(0)
@@ -54,7 +56,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     if (!schema?.properties) return null
     const xsteps = schema["x-steps"]
     if (!xsteps || xsteps.length === 0) {
-      return [{ title: "Parameters", fields: Object.keys(schema.properties) }]
+      return [{ title: t("mainPanel.parameters"), fields: Object.keys(schema.properties) }]
     }
     return xsteps
   }, [schema])
@@ -64,27 +66,27 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   const handleExecute = async () => {
     if (!selectedTool) return
     setRunning(true)
-    onLog({ stream: "stdout", text: `Starting ${selectedTool}...`, ts: Date.now() })
+    onLog({ stream: "stdout", text: t("console.starting", { tool: selectedTool }), ts: Date.now() })
     try {
       if (IS_MOCK) {
         const { mockExecuteTool } = await import("@/mock")
         const result = await mockExecuteTool(selectedTool, values, onLog)
         if (result && result.code === 0) {
-          onLog({ stream: "stdout", text: `SUCCESS (${result.output})`, ts: Date.now() })
+          onLog({ stream: "stdout", text: t("console.success", { output: result.output }), ts: Date.now() })
         } else if (result) {
-          onLog({ stream: "stderr", text: `ERROR [code ${result.code}]: ${result.output}`, ts: Date.now() })
+          onLog({ stream: "stderr", text: t("console.errorCode", { code: result.code, output: result.output }), ts: Date.now() })
         }
         setRunning(false)
         return
       }
       const result = await WailsApp.ExecuteTool(selectedTool ?? "", values)
       if (result && result.code === 0) {
-        onLog({ stream: "stdout", text: `SUCCESS (${result.output})`, ts: Date.now() })
+        onLog({ stream: "stdout", text: t("console.success", { output: result.output }), ts: Date.now() })
       } else if (result) {
-        onLog({ stream: "stderr", text: `ERROR [code ${result.code}]: ${result.output}`, ts: Date.now() })
+        onLog({ stream: "stderr", text: t("console.errorCode", { code: result.code, output: result.output }), ts: Date.now() })
       }
     } catch (e) {
-      onLog({ stream: "stderr", text: `Execution failed: ${e}`, ts: Date.now() })
+      onLog({ stream: "stderr", text: t("console.execFailed", { error: String(e) }), ts: Date.now() })
     }
     setRunning(false)
   }
@@ -97,7 +99,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   if (!selectedTool) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p>Select a tool from the sidebar to get started.</p>
+        <p>{t("app.selectTool")}</p>
       </div>
     )
   }
@@ -105,7 +107,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   if (!schema) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p>Loading...</p>
+        <p>{t("mainPanel.loading")}</p>
       </div>
     )
   }
@@ -168,21 +170,21 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
         <div className="flex gap-2">
           {steps && currentStep > 0 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s - 1)}>
-              <ChevronLeft className="h-4 w-4 mr-1" /> Previous
+              <ChevronLeft className="h-4 w-4 mr-1" /> {t("mainPanel.previous")}
             </Button>
           )}
           {steps && currentStep < steps.length - 1 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s + 1)}>
-              Next <ChevronRight className="h-4 w-4 ml-1" />
+              {t("mainPanel.next")} <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
         </div>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4 mr-1" /> Reset
+            <RotateCcw className="h-4 w-4 mr-1" /> {t("mainPanel.reset")}
           </Button>
           <Button size="sm" onClick={handleExecute} disabled={running}>
-            <Play className="h-4 w-4 mr-1" /> {running ? "Running..." : "Execute"}
+            <Play className="h-4 w-4 mr-1" /> {running ? t("mainPanel.running") : t("mainPanel.execute")}
           </Button>
         </div>
       </div>

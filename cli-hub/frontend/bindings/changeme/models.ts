@@ -6,6 +6,33 @@
 import { Create as $Create } from "@wailsio/runtime";
 
 /**
+ * AppSettings holds user-configurable application settings persisted in db/settings.json.
+ */
+export class AppSettings {
+    /**
+     * path to directory containing CLI tools
+     */
+    "cliPath": string;
+
+    /** Creates a new AppSettings instance. */
+    constructor($$source: Partial<AppSettings> = {}) {
+        if (!("cliPath" in $$source)) {
+            this["cliPath"] = "";
+        }
+
+        Object.assign(this, $$source);
+    }
+
+    /**
+     * Creates a new AppSettings instance from a string or object.
+     */
+    static createFrom($$source: any = {}): AppSettings {
+        let $$parsedSource = typeof $$source === 'string' ? JSON.parse($$source) : $$source;
+        return new AppSettings($$parsedSource as Partial<AppSettings>);
+    }
+}
+
+/**
  * ExecuteResult is the summary returned after execution completes.
  */
 export class ExecuteResult {

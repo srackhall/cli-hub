@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { HelpTooltip } from "@/components/HelpTooltip"
 import { Plus, Trash2 } from "lucide-react"
 import type { ToolSchema, SchemaProp } from "@/types"
 
@@ -47,8 +49,8 @@ function FormField({
   value: unknown
   onChange: (v: unknown) => void
 }) {
+  const { t } = useTranslation()
   const label = prop.description ?? name
-  const isRequired = false
 
   // Boolean -> Checkbox
   if (prop.type === "boolean") {
@@ -56,12 +58,13 @@ function FormField({
       <div className="flex items-center gap-2">
         <Checkbox
           id={name}
-          checked={value as boolean ?? prop.default as boolean ?? false}
+          checked={(value as boolean) ?? (prop.default as boolean) ?? false}
           onCheckedChange={(checked) => onChange(checked)}
         />
         <Label htmlFor={name} className="cursor-pointer">
           {label}
         </Label>
+        <HelpTooltip paramKey={name} description={prop.description} />
       </div>
     )
   }
@@ -70,16 +73,19 @@ function FormField({
   if (prop.enum && prop.enum.length > 0) {
     return (
       <div className="space-y-1.5">
-        <Label htmlFor={name}>{label}</Label>
+        <div className="flex items-center gap-1">
+          <Label htmlFor={name}>{label}</Label>
+          <HelpTooltip paramKey={name} description={prop.description} />
+        </div>
         <Select
           value={(value as string) ?? (prop.default as string) ?? ""}
           onValueChange={(v) => onChange(v === "__empty__" ? "" : v)}
         >
           <SelectTrigger id={name}>
-            <SelectValue placeholder={`Select ${label}...`} />
+            <SelectValue placeholder={t("dynamicForm.select", { label })} />
           </SelectTrigger>
           <SelectContent>
-            {!isRequired && <SelectItem value="__empty__">(none)</SelectItem>}
+            <SelectItem value="__empty__">{t("dynamicForm.none")}</SelectItem>
             {prop.enum.map((opt) => (
               <SelectItem key={opt} value={opt}>
                 {opt}
@@ -95,7 +101,10 @@ function FormField({
   if (prop.type === "number" || prop.type === "integer") {
     return (
       <div className="space-y-1.5">
-        <Label htmlFor={name}>{label}</Label>
+        <div className="flex items-center gap-1">
+          <Label htmlFor={name}>{label}</Label>
+          <HelpTooltip paramKey={name} description={prop.description} />
+        </div>
         <Input
           id={name}
           type="number"
@@ -116,7 +125,10 @@ function FormField({
     const items = (value as string[]) ?? (prop.default as string[]) ?? []
     return (
       <div className="space-y-1.5">
-        <Label>{label}</Label>
+        <div className="flex items-center gap-1">
+          <Label>{label}</Label>
+          <HelpTooltip paramKey={name} description={prop.description} />
+        </div>
         <div className="space-y-2">
           {items.map((item, idx) => (
             <div key={idx} className="flex gap-2">
@@ -145,7 +157,7 @@ function FormField({
             size="sm"
             onClick={() => onChange([...items, ""])}
           >
-            <Plus className="h-4 w-4 mr-1" /> Add
+            <Plus className="h-4 w-4 mr-1" /> {t("dynamicForm.add")}
           </Button>
         </div>
       </div>
@@ -155,7 +167,10 @@ function FormField({
   // string (default) — covers file-path, directory-path, and plain strings
   return (
     <div className="space-y-1.5">
-      <Label htmlFor={name}>{label}</Label>
+      <div className="flex items-center gap-1">
+        <Label htmlFor={name}>{label}</Label>
+        <HelpTooltip paramKey={name} description={prop.description} />
+      </div>
       <Input
         id={name}
         value={(value as string) ?? (prop.default as string) ?? ""}

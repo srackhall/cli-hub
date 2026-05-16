@@ -1,0 +1,58 @@
+{
+  "app": {
+    "title": "CLI Hub",
+    "selectTool": "Select a tool from the sidebar to get started."
+  },
+  "nav": {
+    "tools": "Tools",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "search": "Search tools...",
+    "noTools": "No tools found",
+    "noMatches": "No matches",
+    "errBadge": "Err"
+  },
+  "mainPanel": {
+    "loading": "Loading...",
+    "parameters": "Parameters",
+    "previous": "Previous",
+    "next": "Next",
+    "reset": "Reset",
+    "execute": "Execute",
+    "running": "Running..."
+  },
+  "console": {
+    "ready": "Ready. Select a tool and click Execute to begin.",
+    "starting": "Starting {{tool}}...",
+    "success": "SUCCESS ({{output}})",
+    "errorCode": "ERROR [code {{code}}]: {{output}}",
+    "execFailed": "Execution failed: {{error}}"
+  },
+  "statusBar": {
+    "toolsDir": "cli/",
+    "toolCount_one": "{{count}} tool",
+    "toolCount_other": "{{count}} tools",
+    "allReady": "All Ready",
+    "readyCount": "{{ready}}/{{total}} Ready"
+  },
+  "dynamicForm": {
+    "select": "Select {{label}}...",
+    "none": "(none)",
+    "add": "Add"
+  },
+  "settings": {
+    "title": "Settings",
+    "cliPathLabel": "CLI Tools Storage Path",
+    "cliPathDesc": "Specify a directory to store and manage your CLI tools. A cli/ subdirectory will be created automatically.",
+    "save": "Save",
+    "saved": "Saved",
+    "refresh": "Refresh tool list",
+    "cliDirHint": "A cli/ directory will be created at the specified path to store imported tools.",
+    "dbDirHint": "Settings and persistence data are stored in cli/../db/settings.json"
+  },
+  "language": {
+    "switch": "中文",
+    "label": "Switch language"
+  }
+}

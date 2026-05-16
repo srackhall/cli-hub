@@ -9,6 +9,7 @@ export {
 };
 
 export {
+    AppSettings,
     ExecuteResult,
     SchemaProp,
     StepGroup,

@@ -33,12 +33,35 @@ export function GetSchema(name: string): $CancellablePromise<$models.ToolSchema 
 }
 
 /**
+ * GetSettings returns the current application settings.
+ */
+export function GetSettings(): $CancellablePromise<$models.AppSettings> {
+    return $Call.ByID(2554697378).then(($result: any) => {
+        return $$createType4($result);
+    });
+}
+
+/**
  * ListTools scans and returns all available CLI tools.
  */
 export function ListTools(): $CancellablePromise<$models.ToolInfo[]> {
     return $Call.ByID(3282129816).then(($result: any) => {
-        return $$createType5($result);
+        return $$createType6($result);
     });
+}
+
+/**
+ * RefreshTools forces a rescan of the tools directory.
+ */
+export function RefreshTools(): $CancellablePromise<void> {
+    return $Call.ByID(115815919);
+}
+
+/**
+ * UpdateSettings persists new application settings and creates cli dir if needed.
+ */
+export function UpdateSettings(newSettings: $models.AppSettings): $CancellablePromise<void> {
+    return $Call.ByID(2894041249, newSettings);
 }
 
 // Private type creation functions
@@ -46,5 +69,6 @@ const $$createType0 = $models.ExecuteResult.createFrom;
 const $$createType1 = $Create.Nullable($$createType0);
 const $$createType2 = $models.ToolSchema.createFrom;
 const $$createType3 = $Create.Nullable($$createType2);
-const $$createType4 = $models.ToolInfo.createFrom;
-const $$createType5 = $Create.Array($$createType4);
+const $$createType4 = $models.AppSettings.createFrom;
+const $$createType5 = $models.ToolInfo.createFrom;
+const $$createType6 = $Create.Array($$createType5);
