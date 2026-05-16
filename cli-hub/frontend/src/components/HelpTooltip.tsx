@@ -12,7 +12,7 @@ export function HelpTooltip({ paramKey, description }: HelpTooltipProps) {
 
   return (
     <span
-      className="inline-flex items-center cursor-help text-muted-foreground hover:text-foreground transition-colors"
+      className="inline-flex items-center cursor-help text-muted-foreground/60 hover:text-muted-foreground transition-colors duration-150"
       title={tooltip}
       aria-label={tooltip}
     >

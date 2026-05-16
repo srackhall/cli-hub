@@ -83,16 +83,21 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
 
   if (!selectedTool) {
     return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p className="text-sm text-center px-6">{t("app.selectTool")}</p>
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center max-w-sm">
+          <div className="w-12 h-12 rounded-xl bg-accent/50 mx-auto mb-4 flex items-center justify-center">
+            <Play className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t("app.selectTool")}</p>
+        </div>
       </div>
     )
   }
 
   if (!schema) {
     return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p>{t("mainPanel.loading")}</p>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-sm text-muted-foreground animate-pulse">{t("mainPanel.loading")}</p>
       </div>
     )
   }
@@ -100,43 +105,44 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-w-0">
       {/* Header */}
-      <div className="px-5 py-3 border-b shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="px-6 py-4 border-b shrink-0">
+        <div className="flex items-center gap-2.5">
           <h2 className="text-sm font-semibold truncate">{toolTitle}</h2>
-          <Badge variant="secondary" className="shrink-0 text-[10px]">{selectedTool}</Badge>
+          <Badge variant="secondary" className="shrink-0 text-[10px] font-mono px-1.5">{selectedTool}</Badge>
         </div>
         {toolDesc && (
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{toolDesc}</p>
+          <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">{toolDesc}</p>
         )}
         {toolLongDesc && (
-          <p className="text-[10px] text-muted-foreground/70 mt-1.5 leading-relaxed whitespace-pre-wrap line-clamp-4">{toolLongDesc}</p>
+          <p className="text-[11px] text-muted-foreground/70 mt-2 leading-relaxed whitespace-pre-wrap line-clamp-4">{toolLongDesc}</p>
         )}
       </div>
 
       {/* Step indicator */}
       {steps && steps.length > 1 && (
-        <div className="px-5 py-1.5 border-b flex items-center gap-1.5 text-xs shrink-0">
+        <div className="px-6 py-2 border-b flex items-center gap-2 text-[11px] shrink-0">
           {steps.map((step, idx) => (
-            <div key={idx} className="flex items-center gap-1">
-              {idx > 0 && <span className="text-muted-foreground">/</span>}
-              <span
-                className={`${
+            <div key={idx} className="flex items-center gap-1.5">
+              {idx > 0 && <span className="text-border">/</span>}
+              <button
+                className={`transition-colors duration-150 ${
                   idx === currentStep
-                    ? "text-foreground font-medium"
+                    ? "text-green-400 font-medium"
                     : idx < currentStep
-                    ? "text-muted-foreground"
-                    : "text-muted-foreground/50"
+                    ? "text-muted-foreground hover:text-foreground"
+                    : "text-muted-foreground/40"
                 }`}
+                onClick={() => idx < currentStep && setCurrentStep(idx)}
               >
                 {text(step.title, step.titleZh)}
-              </span>
+              </button>
             </div>
           ))}
         </div>
       )}
 
       {/* Form body */}
-      <div className="flex-1 overflow-auto px-5 py-3 min-h-0">
+      <div className="flex-1 overflow-auto px-6 py-4 min-h-0">
         {schema && (
           <DynamicForm
             schema={{
@@ -154,25 +160,34 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       </div>
 
       {/* Action bar */}
-      <div className="px-5 py-2 border-t flex items-center justify-between shrink-0">
-        <div className="flex gap-1.5">
+      <div className="px-6 py-3 border-t flex items-center justify-between shrink-0">
+        <div className="flex gap-2">
           {steps && currentStep > 0 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s - 1)}>
-              <ChevronLeft className="h-4 w-4 mr-1" /> {t("mainPanel.previous")}
+              <ChevronLeft className="h-4 w-4 mr-1" />
+              {t("mainPanel.previous")}
             </Button>
           )}
           {steps && currentStep < steps.length - 1 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s + 1)}>
-              {t("mainPanel.next")} <ChevronRight className="h-4 w-4 ml-1" />
+              {t("mainPanel.next")}
+              <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={handleReset}>
-            <RotateCcw className="h-4 w-4 mr-1" /> {t("mainPanel.reset")}
+            <RotateCcw className="h-4 w-4 mr-1" />
+            {t("mainPanel.reset")}
           </Button>
-          <Button size="sm" onClick={handleExecute} disabled={running}>
-            <Play className="h-4 w-4 mr-1" /> {running ? t("mainPanel.running") : t("mainPanel.execute")}
+          <Button
+            size="sm"
+            onClick={handleExecute}
+            disabled={running}
+            className="bg-green-600 hover:bg-green-500 text-white font-medium px-4"
+          >
+            <Play className="h-4 w-4 mr-1.5" />
+            {running ? t("mainPanel.running") : t("mainPanel.execute")}
           </Button>
         </div>
       </div>

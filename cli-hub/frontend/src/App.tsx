@@ -16,7 +16,7 @@ import "@/i18n"
 
 type Page = "tools" | "settings"
 
-const MIN_SIDEBAR = 140
+const MIN_SIDEBAR = 160
 const MAX_SIDEBAR = 420
 const MIN_CONSOLE = 80
 
@@ -27,8 +27,8 @@ export default function App() {
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
 
-  const sidebar = useResizable({ defaultSize: 200, minSize: MIN_SIDEBAR, maxSize: MAX_SIDEBAR, axis: "x" })
-  const consolePanel = useResizable({ defaultSize: 150, minSize: MIN_CONSOLE, maxSize: 500, axis: "y" })
+  const sidebar = useResizable({ defaultSize: 220, minSize: MIN_SIDEBAR, maxSize: MAX_SIDEBAR, axis: "x" })
+  const consolePanel = useResizable({ defaultSize: 160, minSize: MIN_CONSOLE, maxSize: 500, axis: "y" })
 
   const loadTools = useCallback(() => {
     let cancelled = false
@@ -65,25 +65,28 @@ export default function App() {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {/* Top bar */}
-      <div className="h-9 border-b flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
-        <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+      {/* Top bar — macOS titlebar region */}
+      <div
+        className="h-10 border-b flex items-center justify-between px-4 shrink-0"
+        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
+      >
+        <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <Button
             variant={page === "tools" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("tools")}
-            className="h-7 text-xs px-2.5 rounded-md"
+            className="h-7 text-[11px] px-2.5 rounded-md font-medium"
           >
-            <Wrench className="h-3.5 w-3.5 mr-1" />
+            <Wrench className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tools")}
           </Button>
           <Button
             variant={page === "settings" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("settings")}
-            className="h-7 text-xs px-2.5 rounded-md"
+            className="h-7 text-[11px] px-2.5 rounded-md font-medium"
           >
-            <SettingsIcon className="h-3.5 w-3.5 mr-1" />
+            <SettingsIcon className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.settings")}
           </Button>
         </div>
@@ -92,7 +95,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Main content */}
       {page === "tools" ? (
         <>
           <div className="flex flex-1 overflow-hidden min-h-0">
@@ -125,7 +127,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Drag overlay for smooth mouse tracking */}
       {(sidebar.dragging || consolePanel.dragging) && (
         <div className={`drag-overlay${consolePanel.dragging ? " drag-overlay-y" : ""}`} />
       )}

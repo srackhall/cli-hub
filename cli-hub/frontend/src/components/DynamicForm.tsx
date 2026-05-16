@@ -25,7 +25,7 @@ export function DynamicForm({ schema, values, onChange }: DynamicFormProps) {
   const fields = Object.entries(schema.properties ?? {})
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {fields.map(([key, prop]) => (
         <FormField
           key={key}
@@ -54,16 +54,16 @@ function FormField({
   const { text } = useLocale()
   const label = text(prop.description, prop.descriptionZh) ?? name
 
-  // Boolean -> Checkbox
   if (prop.type === "boolean") {
     return (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3 py-1">
         <Checkbox
           id={name}
           checked={(value as boolean) ?? (prop.default as boolean) ?? false}
           onCheckedChange={(checked) => onChange(checked)}
+          className="h-4 w-4"
         />
-        <Label htmlFor={name} className="cursor-pointer">
+        <Label htmlFor={name} className="cursor-pointer text-xs">
           {label}
         </Label>
         <HelpTooltip paramKey={name} description={label} />
@@ -71,19 +71,18 @@ function FormField({
     )
   }
 
-  // Enum -> Select
   if (prop.enum && prop.enum.length > 0) {
     return (
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1">
-          <Label htmlFor={name}>{label}</Label>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={name} className="text-xs">{label}</Label>
           <HelpTooltip paramKey={name} description={label} />
         </div>
         <Select
           value={(value as string) ?? (prop.default as string) ?? ""}
           onValueChange={(v) => onChange(v === "__empty__" ? "" : v)}
         >
-          <SelectTrigger id={name}>
+          <SelectTrigger id={name} className="h-8 text-xs">
             <SelectValue placeholder={t("dynamicForm.select", { label })} />
           </SelectTrigger>
           <SelectContent>
@@ -99,12 +98,11 @@ function FormField({
     )
   }
 
-  // number / integer
   if (prop.type === "number" || prop.type === "integer") {
     return (
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1">
-          <Label htmlFor={name}>{label}</Label>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor={name} className="text-xs">{label}</Label>
           <HelpTooltip paramKey={name} description={label} />
         </div>
         <Input
@@ -117,18 +115,18 @@ function FormField({
             const v = e.target.value === "" ? "" : Number(e.target.value)
             onChange(v)
           }}
+          className="h-8 text-xs"
         />
       </div>
     )
   }
 
-  // array of strings
   if (prop.type === "array" && prop.items?.type === "string") {
     const items = (value as string[]) ?? (prop.default as string[]) ?? []
     return (
-      <div className="space-y-1.5">
-        <div className="flex items-center gap-1">
-          <Label>{label}</Label>
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5">
+          <Label className="text-xs">{label}</Label>
           <HelpTooltip paramKey={name} description={label} />
         </div>
         <div className="space-y-2">
@@ -141,36 +139,38 @@ function FormField({
                   next[idx] = e.target.value
                   onChange(next)
                 }}
+                className="h-8 text-xs"
               />
               <Button
                 variant="ghost"
                 size="icon"
+                className="h-8 w-8 shrink-0"
                 onClick={() => {
                   const next = items.filter((_, i) => i !== idx)
                   onChange(next)
                 }}
               >
-                <Trash2 className="h-4 w-4" />
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
           ))}
           <Button
             variant="outline"
             size="sm"
+            className="h-7 text-xs"
             onClick={() => onChange([...items, ""])}
           >
-            <Plus className="h-4 w-4 mr-1" /> {t("dynamicForm.add")}
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t("dynamicForm.add")}
           </Button>
         </div>
       </div>
     )
   }
 
-  // string (default) — covers file-path, directory-path, and plain strings
   return (
-    <div className="space-y-1.5">
-      <div className="flex items-center gap-1">
-        <Label htmlFor={name}>{label}</Label>
+    <div className="space-y-2">
+      <div className="flex items-center gap-1.5">
+        <Label htmlFor={name} className="text-xs">{label}</Label>
         <HelpTooltip paramKey={name} description={label} />
       </div>
       <Input
@@ -178,6 +178,7 @@ function FormField({
         value={(value as string) ?? (prop.default as string) ?? ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={prop.format === "file-path" ? "/path/to/file" : prop.format === "directory-path" ? "/path/to/dir" : ""}
+        className="h-8 text-xs"
       />
     </div>
   )
