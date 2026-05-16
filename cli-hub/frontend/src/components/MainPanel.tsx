@@ -127,7 +127,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
               <button
                 className={`transition-colors duration-150 ${
                   idx === currentStep
-                    ? "text-green-400 font-medium"
+                    ? "text-[#007AFF] font-medium"
                     : idx < currentStep
                     ? "text-muted-foreground hover:text-foreground"
                     : "text-muted-foreground/40"
@@ -184,7 +184,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
             size="sm"
             onClick={handleExecute}
             disabled={running}
-            className="bg-green-600 hover:bg-green-500 text-white font-medium px-4"
+            className="bg-[#007AFF] hover:bg-[#0066D6] text-white font-medium px-4"
           >
             <Play className="h-4 w-4 mr-1.5" />
             {running ? t("mainPanel.running") : t("mainPanel.execute")}

@@ -55,22 +55,31 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
   const compact = width < 180
 
   return (
-    <div className="border-r flex flex-col shrink-0" style={{ width }}>
+    <div
+      className="flex flex-col shrink-0 border-r"
+      style={{
+        width,
+        background: "var(--sidebar-glass-bg)",
+        backdropFilter: "blur(var(--sidebar-glass-blur)) saturate(var(--sidebar-glass-saturate))",
+        WebkitBackdropFilter: "blur(var(--sidebar-glass-blur)) saturate(var(--sidebar-glass-saturate))",
+        borderRightColor: "var(--sidebar-glass-border)",
+      }}
+    >
       {/* Header */}
-      <div className="p-3 border-b space-y-2.5 shrink-0">
+      <div className="p-3 space-y-2.5 shrink-0">
         <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
           <Input
             placeholder={t("sidebar.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pl-8 h-8 text-xs"
+            className="pl-8 h-8 text-xs bg-white/[0.06] border-white/[0.08] focus-visible:bg-white/[0.10]"
           />
         </div>
         <Button
           variant="outline"
           size="sm"
-          className="w-full h-8 text-xs font-medium"
+          className="w-full h-8 text-xs font-medium border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08]"
           onClick={() => fileInputRef.current?.click()}
           disabled={importing}
         >
@@ -91,25 +100,25 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
               key={tool.name}
               className={`group w-full text-left px-2.5 py-2 rounded-md transition-all duration-150 flex items-center gap-2 cursor-pointer ${
                 isSelected
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent/50 text-foreground"
+                  ? "bg-[#007AFF]/20 text-foreground"
+                  : "hover:bg-white/[0.06] text-foreground/85"
               }`}
               onClick={() => onSelectTool(tool.name)}
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter") onSelectTool(tool.name) }}
             >
-              <Box className={`h-3.5 w-3.5 shrink-0 ${isSelected ? "text-green-400" : "text-muted-foreground"}`} />
+              <Box className={`h-3.5 w-3.5 shrink-0 transition-colors duration-150 ${isSelected ? "text-[#007AFF]" : "text-muted-foreground/60"}`} />
               <div className="truncate flex-1 min-w-0">
-                <div className="truncate text-xs font-medium font-mono">{tool.name}</div>
+                <div className={`truncate text-xs font-medium font-mono tracking-tight ${isSelected ? "" : ""}`}>{tool.name}</div>
                 {desc && !compact && (
-                  <div className="truncate text-[10px] text-muted-foreground mt-0.5 leading-relaxed">
+                  <div className="truncate text-[10px] text-muted-foreground/60 mt-0.5 leading-relaxed">
                     {desc}
                   </div>
                 )}
               </div>
               {!tool.ready && (
-                <Badge variant="destructive" className="ml-auto shrink-0 text-[9px] px-1.5 py-0 h-4">
+                <Badge variant="destructive" className="ml-auto shrink-0 text-[9px] px-1.5 py-0 h-4 opacity-70">
                   {t("sidebar.errBadge")}
                 </Badge>
               )}
@@ -123,12 +132,12 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
                 }}
                 title={t("sidebar.delete")}
               >
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive transition-colors" />
+                <Trash2 className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-destructive transition-colors" />
               </Button>
             </div>
           )})}
           {filtered.length === 0 && (
-            <p className="text-xs text-muted-foreground text-center py-8 px-2 leading-relaxed">
+            <p className="text-xs text-muted-foreground/60 text-center py-8 px-2 leading-relaxed">
               {tools.length === 0 ? t("sidebar.noTools") : t("sidebar.noMatches")}
             </p>
           )}

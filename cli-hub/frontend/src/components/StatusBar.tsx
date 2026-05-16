@@ -23,8 +23,8 @@ export function StatusBar({ toolCount, readyCount }: StatusBarProps) {
         <span className="flex items-center gap-1.5">
           {allReady ? (
             <>
-              <CheckCircle2 className="h-3 w-3 text-green-500" />
-              <span className="text-green-500 font-medium">{t("statusBar.allReady")}</span>
+              <CheckCircle2 className="h-3 w-3 text-[#007AFF]" />
+              <span className="text-[#007AFF] font-medium">{t("statusBar.allReady")}</span>
             </>
           ) : (
             <>

@@ -21,21 +21,21 @@ export function Console({ logs, height }: ConsoleProps) {
     <div
       ref={ref}
       className="border-t overflow-auto shrink-0 font-mono text-[11px] leading-relaxed p-3"
-      style={{ height, backgroundColor: "#090E15", color: "#A7F3D0" }}
+      style={{ height, background: "var(--console-bg)", color: "var(--console-text)" }}
     >
       {logs.length === 0 && (
-        <p className="text-green-900/60">{t("console.ready")}</p>
+        <p className="opacity-30">{t("console.ready")}</p>
       )}
       {logs.map((entry, i) => (
         <div
           key={i}
           className={
             entry.stream === "stderr"
-              ? "text-red-400"
-              : "text-green-300/90"
+              ? "text-red-500/90"
+              : "opacity-85"
           }
         >
-          <span className="text-green-900/50 select-none">
+          <span className="opacity-20 select-none">
             [{new Date(entry.ts).toLocaleTimeString()}]
           </span>{" "}
           {entry.text}

@@ -1,61 +1,64 @@
 {
   "app": {
     "title": "CLI Hub",
-    "selectTool": "Select a tool from the sidebar to get started."
+    "selectTool": "从侧边栏选择一个工具开始使用。"
   },
   "nav": {
-    "tools": "Tools",
-    "settings": "Settings"
+    "tools": "工具",
+    "settings": "设置"
   },
   "sidebar": {
-    "search": "Search tools...",
-    "noTools": "No tools imported yet. Use the + button to import a CLI tool binary.",
-    "noMatches": "No matches",
-    "errBadge": "Err",
-    "import": "Import",
-    "delete": "Delete tool",
-    "deleteConfirm": "Remove {{name}} from CLI Hub? This only removes the copy in the tools directory."
+    "search": "搜索工具...",
+    "noTools": "还没有导入工具，请使用 + 按钮导入 CLI 工具二进制文件。",
+    "noMatches": "没有匹配结果",
+    "errBadge": "错误",
+    "import": "导入",
+    "delete": "删除工具",
+    "deleteConfirm": "确定要从 CLI Hub 中移除 {{name}} 吗？这只会删除工具目录中的副本。"
   },
   "mainPanel": {
-    "loading": "Loading...",
-    "parameters": "Parameters",
-    "previous": "Previous",
-    "next": "Next",
-    "reset": "Reset",
-    "execute": "Execute",
-    "running": "Running..."
+    "loading": "加载中...",
+    "parameters": "参数",
+    "previous": "上一步",
+    "next": "下一步",
+    "reset": "重置",
+    "execute": "执行",
+    "running": "运行中..."
   },
   "console": {
-    "ready": "Ready. Select a tool and click Execute to begin.",
-    "starting": "Starting {{tool}}...",
-    "success": "SUCCESS ({{output}})",
-    "errorCode": "ERROR [code {{code}}]: {{output}}",
-    "execFailed": "Execution failed: {{error}}"
+    "ready": "准备就绪。选择一个工具并点击执行开始。",
+    "starting": "正在启动 {{tool}}...",
+    "success": "成功 ({{output}})",
+    "errorCode": "错误 [代码 {{code}}]: {{output}}",
+    "execFailed": "执行失败: {{error}}"
   },
   "statusBar": {
     "toolsDir": "cli/",
-    "toolCount_one": "{{count}} tool",
-    "toolCount_other": "{{count}} tools",
-    "allReady": "All Ready",
-    "readyCount": "{{ready}}/{{total}} Ready"
+    "toolCount": "{{count}} 个工具",
+    "allReady": "全部就绪",
+    "readyCount": "{{ready}}/{{total}} 就绪"
   },
   "dynamicForm": {
-    "select": "Select {{label}}...",
-    "none": "(none)",
-    "add": "Add"
+    "select": "选择 {{label}}...",
+    "none": "(无)",
+    "add": "添加"
   },
   "settings": {
-    "title": "Settings",
-    "cliPathLabel": "CLI Tools Storage Path",
-    "cliPathDesc": "Specify a directory to store and manage your CLI tools. A cli/ subdirectory will be created automatically.",
-    "save": "Save",
-    "saved": "Saved",
-    "refresh": "Refresh tool list",
-    "cliDirHint": "A cli/ directory will be created at the specified path to store imported tools.",
-    "dbDirHint": "Settings and persistence data are stored in cli/../db/settings.json"
+    "title": "设置",
+    "cliPathLabel": "CLI 工具存储路径",
+    "cliPathDesc": "指定一个目录来存放和管理你的 CLI 工具。应用会自动在此路径下创建 cli 目录。",
+    "save": "保存",
+    "saved": "已保存",
+    "refresh": "刷新工具列表",
+    "cliDirHint": "应用会自动在指定路径创建 cli/ 目录来存放导入的工具。",
+    "dbDirHint": "设置和持久化数据保存在 cli/../db/settings.json"
   },
   "language": {
-    "switch": "中文",
-    "label": "Switch language"
+    "switch": "EN",
+    "label": "切换语言"
+  },
+  "theme": {
+    "light": "切换到浅色模式",
+    "dark": "切换到深色模式"
   }
 }

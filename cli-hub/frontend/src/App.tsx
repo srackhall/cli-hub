@@ -8,8 +8,9 @@ import { StatusBar } from "@/components/StatusBar"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { Settings } from "@/components/Settings"
 import { Button } from "@/components/ui/button"
-import { Wrench, SettingsIcon } from "lucide-react"
+import { Wrench, SettingsIcon, Sun, Moon } from "lucide-react"
 import { useResizable } from "@/hooks/useResizable"
+import { useTheme } from "@/hooks/useTheme"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolInfo, LogEntry } from "@/types"
 import "@/i18n"
@@ -22,6 +23,7 @@ const MIN_CONSOLE = 80
 
 export default function App() {
   const { t } = useTranslation()
+  const { theme, toggleTheme } = useTheme()
   const [page, setPage] = useState<Page>("tools")
   const [tools, setTools] = useState<ToolInfo[]>([])
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
@@ -68,14 +70,14 @@ export default function App() {
       {/* Top bar — macOS titlebar region */}
       <div
         className="h-10 border-b flex items-center justify-between px-4 shrink-0"
-        style={{ WebkitAppRegion: "drag" } as React.CSSProperties}
+        style={{ WebkitAppRegion: "drag", background: "var(--topbar-bg)", backdropFilter: "blur(20px) saturate(180%)" } as React.CSSProperties}
       >
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <Button
             variant={page === "tools" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("tools")}
-            className="h-7 text-[11px] px-2.5 rounded-md font-medium"
+            className="h-7 text-[11px] px-2.5 rounded-md font-medium tracking-tight"
           >
             <Wrench className="h-3.5 w-3.5 mr-1.5" />
             {t("nav.tools")}
@@ -90,8 +92,17 @@ export default function App() {
             {t("nav.settings")}
           </Button>
         </div>
-        <div style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+        <div style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties} className="flex items-center gap-1">
           <LanguageSwitcher />
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7"
+            onClick={toggleTheme}
+            title={theme === "dark" ? t("theme.light") : t("theme.dark")}
+          >
+            {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
+          </Button>
         </div>
       </div>
 

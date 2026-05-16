@@ -1,31 +1,72 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "SF Mono", "Menlo", "Monaco", ui-monospace, "Courier New", monospace;
 }
 
-:root {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --card: 217 33% 17%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 47% 11%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 210 40% 98%;
-  --primary-foreground: 222 47% 11%;
-  --secondary: 217 33% 17%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 63% 51%;
-  --destructive-foreground: 210 40% 98%;
-  --border: 215 28% 25%;
-  --input: 215 28% 25%;
-  --ring: 212 27% 84%;
+/* Dark theme (default) */
+:root,
+.dark {
+  --background: 240 8% 5%;
+  --foreground: 240 8% 95%;
+  --card: 240 6% 10%;
+  --card-foreground: 240 8% 95%;
+  --popover: 240 6% 10%;
+  --popover-foreground: 240 8% 95%;
+  --primary: 240 8% 95%;
+  --primary-foreground: 240 8% 5%;
+  --secondary: 240 5% 14%;
+  --secondary-foreground: 240 8% 90%;
+  --muted: 240 5% 14%;
+  --muted-foreground: 240 5% 55%;
+  --accent: 211 100% 50%;
+  --accent-foreground: 240 8% 95%;
+  --destructive: 0 85% 60%;
+  --destructive-foreground: 240 8% 95%;
+  --border: 240 5% 18%;
+  --input: 240 5% 16%;
+  --ring: 211 100% 50%;
   --radius: 0.5rem;
+
+  --sidebar-glass-bg: rgba(28, 28, 30, 0.75);
+  --sidebar-glass-blur: 20px;
+  --sidebar-glass-saturate: 180%;
+  --sidebar-glass-border: rgba(255, 255, 255, 0.08);
+  --topbar-bg: rgba(28, 28, 30, 0.85);
+  --console-bg: linear-gradient(180deg, #0D1117 0%, #0A0E13 100%);
+  --console-text: #C9D1D9;
+}
+
+/* Light theme */
+.light {
+  --background: 240 5% 96%;
+  --foreground: 240 8% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 8% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 8% 10%;
+  --primary: 240 8% 10%;
+  --primary-foreground: 240 5% 96%;
+  --secondary: 240 5% 92%;
+  --secondary-foreground: 240 8% 15%;
+  --muted: 240 5% 92%;
+  --muted-foreground: 240 5% 45%;
+  --accent: 211 100% 50%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 85% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 240 5% 88%;
+  --input: 240 5% 92%;
+  --ring: 211 100% 50%;
+
+  --sidebar-glass-bg: rgba(245, 245, 247, 0.78);
+  --sidebar-glass-blur: 24px;
+  --sidebar-glass-saturate: 200%;
+  --sidebar-glass-border: rgba(0, 0, 0, 0.08);
+  --topbar-bg: rgba(245, 245, 247, 0.82);
+  --console-bg: linear-gradient(180deg, #F8F8FA 0%, #F2F2F5 100%);
+  --console-text: #1C1C1E;
 }
 
 * {
@@ -52,21 +93,21 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: hsl(var(--muted-foreground) / 0.2);
+  background: hsl(var(--muted-foreground) / 0.25);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--muted-foreground) / 0.35);
+  background: hsl(var(--muted-foreground) / 0.4);
 }
 
 ::selection {
-  background: hsl(142 76% 36% / 0.3);
+  background: hsl(var(--accent) / 0.3);
   color: hsl(var(--foreground));
 }
 
 :focus-visible {
-  outline: 2px solid hsl(142 76% 36% / 0.6);
+  outline: 2px solid hsl(var(--accent) / 0.6);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -88,7 +129,7 @@ body {
 
 .resize-handle-x:hover,
 .resize-handle-x.dragging {
-  background: hsl(142 76% 36% / 0.5);
+  background: hsl(var(--accent) / 0.6);
 }
 
 .resize-handle-y {
@@ -108,7 +149,7 @@ body {
 
 .resize-handle-y:hover,
 .resize-handle-y.dragging {
-  background: hsl(142 76% 36% / 0.5);
+  background: hsl(var(--accent) / 0.6);
 }
 
 .drag-overlay {
