@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DynamicForm } from "@/components/DynamicForm"
 import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
+import * as WailsApp from "@bindings/changeme/app"
 import type { ToolSchema } from "@/types"
 
 interface MainPanelProps {
@@ -27,9 +28,10 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
 
     async function load() {
       try {
-        // @ts-expect-error - Wails runtime
-        const s = await window.go.main.App.GetSchema(selectedTool)
-        setSchema(s)
+        const s = await WailsApp.GetSchema(selectedTool ?? "")
+        if (s) {
+          setSchema(s as unknown as ToolSchema)
+        }
         setValues({})
         setCurrentStep(0)
       } catch (e) {
@@ -55,11 +57,10 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setRunning(true)
     onLog({ stream: "stdout", text: `Starting ${selectedTool}...`, ts: Date.now() })
     try {
-      // @ts-expect-error - Wails runtime
-      const result = await window.go.main.App.ExecuteTool(selectedTool, values)
-      if (result.code === 0) {
+      const result = await WailsApp.ExecuteTool(selectedTool ?? "", values)
+      if (result && result.code === 0) {
         onLog({ stream: "stdout", text: `SUCCESS (${result.output})`, ts: Date.now() })
-      } else {
+      } else if (result) {
         onLog({ stream: "stderr", text: `ERROR [code ${result.code}]: ${result.output}`, ts: Date.now() })
       }
     } catch (e) {

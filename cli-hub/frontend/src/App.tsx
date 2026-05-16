@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react"
+import { Events } from "@wailsio/runtime"
 import { Sidebar } from "@/components/Sidebar"
 import { MainPanel } from "@/components/MainPanel"
 import { Console } from "@/components/Console"
 import { StatusBar } from "@/components/StatusBar"
+import * as WailsApp from "@bindings/changeme/app"
 import type { ToolInfo, LogEntry } from "@/types"
 
 export default function App() {
@@ -13,10 +15,9 @@ export default function App() {
   useEffect(() => {
     async function load() {
       try {
-        // @ts-expect-error - Wails runtime injected at build time
-        const list = await window.go.main.App.ListTools()
-        setTools(list)
-        if (list.length > 0) {
+        const list = await WailsApp.ListTools()
+        setTools(list ?? [])
+        if (list && list.length > 0) {
           setSelectedTool(list[0].name)
         }
       } catch (e) {
@@ -28,17 +29,14 @@ export default function App() {
 
   // Listen for real-time tool output events
   useEffect(() => {
-    try {
-      // @ts-expect-error - Wails runtime
-      window.go.main.App.OnToolOutput((data: { stream: string; text: string }) => {
-        setLogs((prev) => [
-          ...prev,
-          { stream: data.stream, text: data.text, ts: Date.now() } as LogEntry,
-        ])
-      })
-    } catch (e) {
-      // Event listener not available in dev without Wails runtime
-    }
+    const unsub = Events.On("tool-output", (ev: { name: string; data: { stream: string; text: string } }) => {
+      const { stream, text } = ev.data
+      setLogs((prev) => [
+        ...prev,
+        { stream: stream as "stdout" | "stderr", text, ts: Date.now() },
+      ])
+    })
+    return () => unsub()
   }, [])
 
   return (

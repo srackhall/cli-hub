@@ -9,7 +9,8 @@
     /* Paths */
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@bindings/*": ["./bindings/*"]
     },
 
     /* Bundler mode */
