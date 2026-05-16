@@ -27,11 +27,13 @@ jobs:
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
 
       - name: Build macOS (arm64)
+        working-directory: cli-hub
         run: |
           export PATH="$HOME/go/bin:$PATH"
           wails3 build
 
       - name: Package macOS .app bundle
+        working-directory: cli-hub
         run: |
           export PATH="$HOME/go/bin:$PATH"
           wails3 task darwin:package
@@ -41,8 +43,8 @@ jobs:
         with:
           name: cli-hub-macos-arm64
           path: |
-            bin/cli-hub
-            bin/cli-hub.app/**/*
+            cli-hub/bin/cli-hub
+            cli-hub/bin/cli-hub.app/**/*
 
   build-windows:
     runs-on: windows-latest
@@ -63,10 +65,11 @@ jobs:
         run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
 
       - name: Build Windows (amd64)
+        working-directory: cli-hub
         run: wails3 build
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: cli-hub-windows-amd64
-          path: bin/cli-hub.exe
+          path: cli-hub/bin/cli-hub.exe
