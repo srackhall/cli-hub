@@ -21,7 +21,6 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   const [currentStep, setCurrentStep] = useState(0)
   const [running, setRunning] = useState(false)
 
-  // Load schema when tool changes
   useEffect(() => {
     if (!selectedTool) {
       setSchema(null)
@@ -85,7 +84,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   if (!selectedTool) {
     return (
       <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <p className="text-sm md:text-base text-center px-4">{t("app.selectTool")}</p>
+        <p className="text-sm text-center px-6">{t("app.selectTool")}</p>
       </div>
     )
   }
@@ -101,22 +100,22 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   return (
     <div className="flex-1 flex flex-col overflow-hidden min-w-0">
       {/* Header */}
-      <div className="px-4 md:px-6 py-3 md:py-4 border-b shrink-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <h2 className="text-base md:text-lg font-semibold truncate">{toolTitle}</h2>
-          <Badge variant="secondary" className="shrink-0">{selectedTool}</Badge>
+      <div className="px-5 py-3 border-b shrink-0">
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-semibold truncate">{toolTitle}</h2>
+          <Badge variant="secondary" className="shrink-0 text-[10px]">{selectedTool}</Badge>
         </div>
         {toolDesc && (
-          <p className="text-xs md:text-sm text-muted-foreground mt-1 line-clamp-2">{toolDesc}</p>
+          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{toolDesc}</p>
         )}
         {toolLongDesc && (
-          <p className="text-[10px] md:text-xs text-muted-foreground/70 mt-1.5 leading-relaxed whitespace-pre-wrap line-clamp-4">{toolLongDesc}</p>
+          <p className="text-[10px] text-muted-foreground/70 mt-1.5 leading-relaxed whitespace-pre-wrap line-clamp-4">{toolLongDesc}</p>
         )}
       </div>
 
       {/* Step indicator */}
       {steps && steps.length > 1 && (
-        <div className="px-4 md:px-6 py-1.5 md:py-2 border-b flex items-center gap-1.5 md:gap-2 text-xs md:text-sm shrink-0 flex-wrap">
+        <div className="px-5 py-1.5 border-b flex items-center gap-1.5 text-xs shrink-0">
           {steps.map((step, idx) => (
             <div key={idx} className="flex items-center gap-1">
               {idx > 0 && <span className="text-muted-foreground">/</span>}
@@ -137,7 +136,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       )}
 
       {/* Form body */}
-      <div className="flex-1 overflow-auto px-4 md:px-6 py-3 md:py-4 min-h-0">
+      <div className="flex-1 overflow-auto px-5 py-3 min-h-0">
         {schema && (
           <DynamicForm
             schema={{
@@ -155,8 +154,8 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
       </div>
 
       {/* Action bar */}
-      <div className="px-4 md:px-6 py-2 md:py-3 border-t flex items-center justify-between shrink-0">
-        <div className="flex gap-1.5 md:gap-2">
+      <div className="px-5 py-2 border-t flex items-center justify-between shrink-0">
+        <div className="flex gap-1.5">
           {steps && currentStep > 0 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s - 1)}>
               <ChevronLeft className="h-4 w-4 mr-1" /> {t("mainPanel.previous")}
@@ -168,7 +167,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
             </Button>
           )}
         </div>
-        <div className="flex gap-1.5 md:gap-2">
+        <div className="flex gap-1.5">
           <Button variant="ghost" size="sm" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-1" /> {t("mainPanel.reset")}
           </Button>

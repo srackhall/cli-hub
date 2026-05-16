@@ -4,9 +4,10 @@ import type { LogEntry } from "@/types"
 
 interface ConsoleProps {
   logs: LogEntry[]
+  height: number
 }
 
-export function Console({ logs }: ConsoleProps) {
+export function Console({ logs, height }: ConsoleProps) {
   const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
 
@@ -17,7 +18,11 @@ export function Console({ logs }: ConsoleProps) {
   }, [logs])
 
   return (
-    <div ref={ref} className="h-32 sm:h-40 md:h-44 lg:h-48 border-t overflow-auto bg-black text-green-400 font-mono text-[10px] md:text-xs p-2 md:p-3 shrink-0">
+    <div
+      ref={ref}
+      className="border-t overflow-auto bg-black text-green-400 font-mono text-[10px] p-2 shrink-0"
+      style={{ height }}
+    >
       {logs.length === 0 && (
         <p className="text-green-700">{t("console.ready")}</p>
       )}

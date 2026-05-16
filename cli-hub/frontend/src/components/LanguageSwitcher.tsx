@@ -12,8 +12,8 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <Button variant="ghost" size="sm" onClick={toggle} title={t("language.label")}>
-      <Languages className="h-4 w-4 mr-1" />
+    <Button variant="ghost" size="sm" onClick={toggle} title={t("language.label")} className="h-7 text-xs">
+      <Languages className="h-3.5 w-3.5 mr-1" />
       {t("language.switch")}
     </Button>
   )

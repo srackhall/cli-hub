@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
 import { Events } from "@wailsio/runtime"
 import { Sidebar } from "@/components/Sidebar"
@@ -9,11 +9,16 @@ import { LanguageSwitcher } from "@/components/LanguageSwitcher"
 import { Settings } from "@/components/Settings"
 import { Button } from "@/components/ui/button"
 import { Wrench, SettingsIcon } from "lucide-react"
+import { useResizable } from "@/hooks/useResizable"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolInfo, LogEntry } from "@/types"
 import "@/i18n"
 
 type Page = "tools" | "settings"
+
+const MIN_SIDEBAR = 140
+const MAX_SIDEBAR = 420
+const MIN_CONSOLE = 80
 
 export default function App() {
   const { t } = useTranslation()
@@ -22,7 +27,10 @@ export default function App() {
   const [selectedTool, setSelectedTool] = useState<string | null>(null)
   const [logs, setLogs] = useState<LogEntry[]>([])
 
-  const loadTools = () => {
+  const sidebar = useResizable({ defaultSize: 200, minSize: MIN_SIDEBAR, maxSize: MAX_SIDEBAR, axis: "x" })
+  const consolePanel = useResizable({ defaultSize: 150, minSize: MIN_CONSOLE, maxSize: 500, axis: "y" })
+
+  const loadTools = useCallback(() => {
     let cancelled = false
     async function load() {
       for (let attempt = 0; attempt < 5; attempt++) {
@@ -43,52 +51,45 @@ export default function App() {
     }
     load()
     return () => { cancelled = true }
-  }
+  }, [])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadTools() }, [])
+  useEffect(() => { loadTools() }, [loadTools])
 
-  // Listen for real-time tool output events
   useEffect(() => {
     const unsub = Events.On("tool-output", (ev: { name: string; data: { stream: string; text: string } }) => {
       const { stream, text } = ev.data
-      setLogs((prev) => [
-        ...prev,
-        { stream: stream as "stdout" | "stderr", text, ts: Date.now() },
-      ])
+      setLogs((prev) => [...prev, { stream: stream as "stdout" | "stderr", text, ts: Date.now() }])
     })
     return () => unsub()
   }, [])
 
-  const handleRefreshTools = () => {
-    loadTools()
-  }
-
   return (
-    <div className="flex flex-col h-screen min-w-[480px]">
+    <div className="flex flex-col h-screen overflow-hidden">
       {/* Top bar */}
-      <div className="h-9 border-b flex items-center justify-between px-2 md:px-3 bg-muted/20 shrink-0">
-        <div className="flex items-center gap-0.5 md:gap-1">
+      <div className="h-9 border-b flex items-center justify-between px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+        <div className="flex items-center gap-0.5" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <Button
             variant={page === "tools" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("tools")}
-            className="h-7 text-xs px-2"
+            className="h-7 text-xs px-2.5 rounded-md"
           >
-            <Wrench className="h-3.5 w-3.5 mr-1 hidden sm:inline" />
+            <Wrench className="h-3.5 w-3.5 mr-1" />
             {t("nav.tools")}
           </Button>
           <Button
             variant={page === "settings" ? "secondary" : "ghost"}
             size="sm"
             onClick={() => setPage("settings")}
-            className="h-7 text-xs px-2"
+            className="h-7 text-xs px-2.5 rounded-md"
           >
-            <SettingsIcon className="h-3.5 w-3.5 mr-1 hidden sm:inline" />
+            <SettingsIcon className="h-3.5 w-3.5 mr-1" />
             {t("nav.settings")}
           </Button>
         </div>
-        <LanguageSwitcher />
+        <div style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+          <LanguageSwitcher />
+        </div>
       </div>
 
       {/* Main content */}
@@ -96,23 +97,37 @@ export default function App() {
         <>
           <div className="flex flex-1 overflow-hidden min-h-0">
             <Sidebar
+              width={sidebar.size}
               tools={tools}
               selectedTool={selectedTool}
               onSelectTool={setSelectedTool}
-              onRefreshTools={handleRefreshTools}
+              onRefreshTools={loadTools}
+            />
+            <div
+              className={`resize-handle-x${sidebar.dragging ? " dragging" : ""}`}
+              onMouseDown={sidebar.onMouseDown}
             />
             <MainPanel
               selectedTool={selectedTool}
               onLog={(entry) => setLogs((prev) => [...prev, entry as LogEntry])}
             />
           </div>
-          <Console logs={logs} />
+          <div
+            className={`resize-handle-y${consolePanel.dragging ? " dragging" : ""}`}
+            onMouseDown={consolePanel.onMouseDown}
+          />
+          <Console logs={logs} height={consolePanel.size} />
           <StatusBar toolCount={tools.length} readyCount={tools.filter((t) => t.ready).length} />
         </>
       ) : (
         <div className="flex-1 flex overflow-hidden min-h-0">
-          <Settings onRefreshTools={handleRefreshTools} />
+          <Settings onRefreshTools={loadTools} />
         </div>
+      )}
+
+      {/* Drag overlay for smooth mouse tracking */}
+      {(sidebar.dragging || consolePanel.dragging) && (
+        <div className={`drag-overlay${consolePanel.dragging ? " drag-overlay-y" : ""}`} />
       )}
     </div>
   )

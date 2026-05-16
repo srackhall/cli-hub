@@ -33,15 +33,14 @@ export function Settings({ onRefreshTools }: SettingsProps) {
   }
 
   return (
-    <div className="flex-1 overflow-auto p-4 md:p-6 min-w-0">
-      <h2 className="text-base md:text-lg font-semibold mb-4">{t("settings.title")}</h2>
+    <div className="flex-1 overflow-auto p-6 min-w-0">
+      <h2 className="text-base font-semibold mb-4">{t("settings.title")}</h2>
 
-      <div className="space-y-5 md:space-y-6 max-w-lg">
-        {/* CLI Path */}
-        <div className="space-y-1.5 md:space-y-2">
+      <div className="space-y-6 max-w-md">
+        <div className="space-y-2">
           <Label htmlFor="cliPath">{t("settings.cliPathLabel")}</Label>
-          <p className="text-[11px] md:text-xs text-muted-foreground">{t("settings.cliPathDesc")}</p>
-          <div className="flex gap-1.5 md:gap-2">
+          <p className="text-[11px] text-muted-foreground">{t("settings.cliPathDesc")}</p>
+          <div className="flex gap-1.5">
             <Input
               id="cliPath"
               value={cliPath}
@@ -55,19 +54,17 @@ export function Settings({ onRefreshTools }: SettingsProps) {
           </div>
         </div>
 
-        {/* Save */}
         <Button onClick={handleSave} size="sm">
           <Save className="h-4 w-4 mr-1" />
           {saved ? t("settings.saved") : t("settings.save")}
         </Button>
 
-        {/* Info */}
         <div className="pt-4 border-t space-y-2">
-          <div className="flex items-center gap-2 text-xs md:text-sm">
-            <FolderOpen className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground shrink-0" />
+          <div className="flex items-center gap-2 text-xs">
+            <FolderOpen className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <span className="text-muted-foreground">{t("settings.cliDirHint")}</span>
           </div>
-          <p className="text-[10px] md:text-xs text-muted-foreground">
+          <p className="text-[10px] text-muted-foreground">
             {t("settings.dbDirHint")}
           </p>
         </div>
