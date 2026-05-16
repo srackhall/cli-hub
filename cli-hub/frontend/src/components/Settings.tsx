@@ -36,7 +36,7 @@ export function Settings({ onRefreshTools }: SettingsProps) {
     <div className="flex-1 overflow-auto p-6 min-w-0">
       <h2 className="text-sm font-semibold mb-6">{t("settings.title")}</h2>
 
-      <div className="space-y-6 max-w-md">
+      <div className="space-y-6">
         <div className="space-y-2.5">
           <Label htmlFor="cliPath" className="text-xs">{t("settings.cliPathLabel")}</Label>
           <p className="text-[11px] text-muted-foreground leading-relaxed">{t("settings.cliPathDesc")}</p>

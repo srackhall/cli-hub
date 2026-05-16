@@ -84,7 +84,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   if (!selectedTool) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="text-center max-w-sm">
+        <div className="text-center">
           <div className="w-12 h-12 rounded-xl bg-accent/50 mx-auto mb-4 flex items-center justify-center">
             <Play className="h-6 w-6 text-muted-foreground" />
           </div>
