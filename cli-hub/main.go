@@ -97,11 +97,11 @@ func init() {
 }
 
 func main() {
-	exePath, err := os.Executable()
+	configDir, err := os.UserConfigDir()
 	if err != nil {
-		log.Fatal("failed to resolve executable path:", err)
+		log.Fatal("failed to resolve user config directory:", err)
 	}
-	appDir := filepath.Dir(exePath)
+	appDir := filepath.Join(configDir, "CLI-Hub")
 
 	store, err := NewSettingsStore(appDir)
 	if err != nil {
