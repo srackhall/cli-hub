@@ -7,4 +7,5 @@ build/windows/nsis/MicrosoftEdgeWebview2Setup.exe
 db
 cli/
 tools/xlsx-extract/xlsx-extract
-tools/xlsx-extract/test-output.txt
+tools/xlsx-extract/test-output.txttools/.DS_Store
+tools/xlsx-extract/xlsx-extract.exe

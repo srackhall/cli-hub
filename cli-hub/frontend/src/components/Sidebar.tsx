@@ -1,4 +1,4 @@
-import { useState, useRef } from "react"
+import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Search, Box, Plus, Trash2 } from "lucide-react"
 import { useLocale } from "@/hooks/useLocale"
+import { Dialogs } from "@wailsio/runtime"
 import * as WailsApp from "@bindings/changeme/app"
 import type { ToolInfo } from "@/types"
 
@@ -22,24 +23,28 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
   const { text } = useLocale()
   const [search, setSearch] = useState("")
   const [importing, setImporting] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filtered = tools.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleImport = async () => {
     setImporting(true)
     try {
-      await WailsApp.ImportTool((file as any).path ?? file.name)
+      const path = await Dialogs.OpenFile({
+        CanChooseFiles: true,
+        CanChooseDirectories: false,
+        AllowsMultipleSelection: false,
+      })
+      if (!path) return
+      await WailsApp.ImportTool(path as string)
       onRefreshTools()
     } catch (err) {
       console.error("Import failed:", err)
+      window.alert(String(err))
+    } finally {
+      setImporting(false)
     }
-    setImporting(false)
-    if (fileInputRef.current) fileInputRef.current.value = ""
   }
 
   const handleDelete = async (name: string) => {
@@ -80,13 +85,12 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
           variant="outline"
           size="sm"
           className="w-full h-8 text-xs font-medium border-foreground/[0.08] bg-foreground/[0.04] hover:bg-foreground/[0.08]"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleImport}
           disabled={importing}
         >
           <Plus className="h-3.5 w-3.5 mr-1.5" />
           {importing ? "..." : t("sidebar.import")}
         </Button>
-        <input ref={fileInputRef} type="file" onChange={handleImport} className="hidden" />
       </div>
 
       {/* Tool list */}
