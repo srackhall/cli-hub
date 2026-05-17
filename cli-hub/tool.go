@@ -73,7 +73,7 @@ type StepGroup struct {
 func ScanTools(toolsDir string) []ToolInfo {
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
-		return nil
+		return []ToolInfo{}
 	}
 
 	var tools []ToolInfo

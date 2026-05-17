@@ -96,7 +96,10 @@ func (s *SettingsStore) GetToolsDir() string {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 	if s.settings.CliPath != "" {
-		return s.settings.CliPath
+		if filepath.IsAbs(s.settings.CliPath) {
+			return s.settings.CliPath
+		}
+		return filepath.Join(s.appDir, s.settings.CliPath)
 	}
 	return defaultCliPath(s.appDir)
 }
