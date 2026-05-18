@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"sync"
 	"time"
@@ -27,14 +28,14 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 	if !validateToolName(name) {
 		return &ExecuteResult{Status: "error", Output: "invalid tool name", Code: -1}
 	}
-	toolPath := a.settings.GetToolsDir() + "/" + name
+	toolPath := filepath.Join(a.settings.GetToolsDir(), name)
 
 	args := buildArgs(params)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, toolPath, args...)
+	cmd := newCommand(ctx, toolPath, args...)
 
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()

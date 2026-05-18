@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -124,7 +123,7 @@ func getToolVersion(toolPath string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, toolPath, "--version")
+	cmd := newCommand(ctx, toolPath, "--version")
 	output, err := cmd.Output()
 	if err != nil {
 		return "", err
@@ -136,7 +135,7 @@ func getToolSchema(toolPath string) (*ToolSchema, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, toolPath, "--schema")
+	cmd := newCommand(ctx, toolPath, "--schema")
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("schema call failed: %w", err)
