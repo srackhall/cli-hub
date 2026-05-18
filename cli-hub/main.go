@@ -82,7 +82,13 @@ func (a *App) DeleteTool(name string) error {
 }
 
 func main() {
-	store, err := NewSettingsStore(".")
+	exePath, err := os.Executable()
+	if err != nil {
+		log.Fatal("failed to resolve executable path:", err)
+	}
+	appDir := filepath.Dir(exePath)
+
+	store, err := NewSettingsStore(appDir)
 	if err != nil {
 		log.Fatal("failed to initialize settings store:", err)
 	}
