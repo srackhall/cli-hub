@@ -38,17 +38,29 @@ export default function App() {
       for (let attempt = 0; attempt < 5; attempt++) {
         try {
           const list = await WailsApp.ListTools()
-          if (!cancelled && list) {
-            setTools(list)
-            if (list.length > 0 && !selectedTool) {
-              setSelectedTool(list[0].name)
+          console.log(`[loadTools] attempt ${attempt + 1}: got`, list, "type:", typeof list, "isArray:", Array.isArray(list), "length:", list?.length)
+          if (!cancelled) {
+            if (list && Array.isArray(list)) {
+              setTools(list)
+              setSelectedTool((prev) => {
+                if (list.length > 0 && !prev) return list[0].name
+                // If previously selected tool is no longer in list, clear selection
+                if (prev && !list.find((t: ToolInfo) => t.name === prev)) return list.length > 0 ? list[0].name : null
+                return prev
+              })
+              return
             }
-            return
+            console.warn(`[loadTools] attempt ${attempt + 1}: list was falsy or not array, retrying...`)
           }
         } catch (e) {
-          console.error(`ListTools attempt ${attempt + 1} failed:`, e)
+          console.error(`[loadTools] attempt ${attempt + 1} failed:`, e)
         }
         await new Promise((r) => setTimeout(r, 500))
+      }
+      // All retries exhausted — set empty list so UI shows "no tools" message
+      console.warn("[loadTools] all 5 attempts exhausted, setting empty tools")
+      if (!cancelled) {
+        setTools([])
       }
     }
     load()

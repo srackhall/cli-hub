@@ -97,13 +97,7 @@ func init() {
 }
 
 func main() {
-	configDir, err := os.UserConfigDir()
-	if err != nil {
-		log.Fatal("failed to resolve user config directory:", err)
-	}
-	appDir := filepath.Join(configDir, "CLI-Hub")
-
-	store, err := NewSettingsStore(appDir)
+	store, err := NewSettingsStore(".")
 	if err != nil {
 		log.Fatal("failed to initialize settings store:", err)
 	}
