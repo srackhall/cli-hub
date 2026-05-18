@@ -29,7 +29,7 @@ func (a *App) GetSchema(name string) *ToolSchema {
 	if !validateToolName(name) {
 		return nil
 	}
-	toolPath := a.settings.GetToolsDir() + "/" + name
+	toolPath := filepath.Join(a.settings.GetToolsDir(), name)
 	schema, err := getToolSchema(toolPath)
 	if err != nil {
 		return nil

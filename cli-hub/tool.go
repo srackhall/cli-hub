@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -90,7 +91,7 @@ func ScanTools(toolsDir string) []ToolInfo {
 			continue
 		}
 
-		if info.Mode()&0111 == 0 {
+		if !isExecutable(info) {
 			continue
 		}
 
@@ -147,4 +148,12 @@ func getToolSchema(toolPath string) (*ToolSchema, error) {
 	}
 
 	return &schema, nil
+}
+
+func isExecutable(info os.FileInfo) bool {
+	if runtime.GOOS == "windows" {
+		name := info.Name()
+		return strings.HasSuffix(strings.ToLower(name), ".exe")
+	}
+	return info.Mode()&0111 != 0
 }
