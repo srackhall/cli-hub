@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { FolderOpen } from "lucide-react"
-import { Events } from "@wailsio/runtime"
 
 interface FilePathInputProps {
   id?: string
@@ -27,13 +26,20 @@ export function FilePathInput({
   const wrapperRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const unsub = Events.On("common:WindowFilesDropped", (ev) => {
-      const data = ev.data as { filenames?: string[] } | undefined
-      if (data?.filenames && data.filenames.length > 0) {
-        onChange(data.filenames[0])
+    const el = wrapperRef.current
+    if (!el) return
+
+    const onFilesDropped = (e: Event) => {
+      const detail = (e as CustomEvent).detail as {
+        files?: string[]
+      } | undefined
+      if (detail?.files && detail.files.length > 0) {
+        onChange(detail.files[0])
       }
-    })
-    return () => unsub()
+    }
+
+    el.addEventListener("wails:filesdropped", onFilesDropped)
+    return () => el.removeEventListener("wails:filesdropped", onFilesDropped)
   }, [onChange])
 
   useEffect(() => {
@@ -87,17 +93,6 @@ export function FilePathInput({
       e.preventDefault()
       e.stopPropagation()
       setDragOver(false)
-
-      const files = e.dataTransfer.files
-      if (files && files.length > 0) {
-        const file = files[0] as File & { path?: string }
-        if (file.path) {
-          onChange(file.path)
-        } else {
-          onChange(file.name)
-        }
-        return
-      }
 
       const text = e.dataTransfer.getData("text/plain")
       if (text) {
