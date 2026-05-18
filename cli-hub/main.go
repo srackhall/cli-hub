@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
@@ -97,7 +98,53 @@ func main() {
 		Assets: application.AssetOptions{
 			Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Access-Control-Allow-Origin", "*")
-				http.FileServer(http.FS(assets)).ServeHTTP(w, r)
+				// 构建嵌入文件系统中的路径
+				path := r.URL.Path
+				if path == "/" {
+					path = "/index.html"
+				}
+				filePath := "frontend/dist" + path
+				// 尝试打开文件
+				f, err := assets.Open(filePath)
+				if err == nil {
+					defer f.Close()
+					stat, err := f.Stat()
+					if err == nil && !stat.IsDir() {
+						// 文件存在，读取并返回内容
+						data, err := io.ReadAll(f)
+						if err == nil {
+							// 根据文件扩展名设置Content-Type
+							ctype := "text/plain"
+							switch {
+							case strings.HasSuffix(path, ".html"):
+								ctype = "text/html"
+							case strings.HasSuffix(path, ".css"):
+								ctype = "text/css"
+							case strings.HasSuffix(path, ".js"):
+								ctype = "application/javascript"
+							case strings.HasSuffix(path, ".png"):
+								ctype = "image/png"
+							case strings.HasSuffix(path, ".jpg") || strings.HasSuffix(path, ".jpeg"):
+								ctype = "image/jpeg"
+							case strings.HasSuffix(path, ".svg"):
+								ctype = "image/svg+xml"
+							case strings.HasSuffix(path, ".ttf"):
+								ctype = "font/ttf"
+							}
+							w.Header().Set("Content-Type", ctype)
+							w.Write(data)
+							return
+						}
+					}
+				}
+				// 文件不存在或是目录，返回 index.html (SPA 路由)
+				indexData, err := assets.ReadFile("frontend/dist/index.html")
+				if err != nil {
+					http.Error(w, "index.html not found", http.StatusNotFound)
+					return
+				}
+				w.Header().Set("Content-Type", "text/html")
+				w.Write(indexData)
 			}),
 		},
 		Mac: application.MacOptions{
