@@ -59,6 +59,22 @@ func (a *App) startHTTPServer() {
 		}
 	})
 
+	mux.HandleFunc("/api/dialogs/open-file", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		a.handleOpenFileDialog(w, r)
+	})
+
+	mux.HandleFunc("/api/dialogs/open-directory", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		a.handleOpenDirectoryDialog(w, r)
+	})
+
 	mux.HandleFunc("/api/settings", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
@@ -214,4 +230,40 @@ func (a *App) handleUpdateSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	a.UpdateSettings(s)
 	writeJSON(w, map[string]any{"status": "ok"})
+}
+
+func (a *App) handleOpenFileDialog(w http.ResponseWriter, r *http.Request) {
+	if a.wailsApp == nil {
+		http.Error(w, "native dialogs unavailable", 500)
+		return
+	}
+	dialog := a.wailsApp.Dialog.OpenFile().
+		CanChooseFiles(true).
+		CanChooseDirectories(false).
+		SetTitle("Select File")
+
+	result, err := dialog.PromptForSingleSelection()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]any{"path": result})
+}
+
+func (a *App) handleOpenDirectoryDialog(w http.ResponseWriter, r *http.Request) {
+	if a.wailsApp == nil {
+		http.Error(w, "native dialogs unavailable", 500)
+		return
+	}
+	dialog := a.wailsApp.Dialog.OpenFile().
+		CanChooseFiles(false).
+		CanChooseDirectories(true).
+		SetTitle("Select Directory")
+
+	result, err := dialog.PromptForSingleSelection()
+	if err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+	writeJSON(w, map[string]any{"path": result})
 }

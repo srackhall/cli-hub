@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
 import { HelpTooltip } from "@/components/HelpTooltip"
+import { FilePathInput } from "@/components/FilePathInput"
 import { useLocale } from "@/hooks/useLocale"
 import { Plus, Trash2 } from "lucide-react"
 import type { ToolSchema, SchemaProp } from "@/types"
@@ -173,12 +174,12 @@ function FormField({
         <Label htmlFor={name} className="text-xs">{label}</Label>
         <HelpTooltip paramKey={name} description={label} />
       </div>
-      <Input
+      <FilePathInput
         id={name}
         value={(value as string) ?? (prop.default as string) ?? ""}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(v) => onChange(v)}
         placeholder={prop.format === "file-path" ? "/path/to/file" : prop.format === "directory-path" ? "/path/to/dir" : ""}
-        className="h-8 text-xs"
+        isDirectory={prop.format === "directory-path"}
       />
     </div>
   )

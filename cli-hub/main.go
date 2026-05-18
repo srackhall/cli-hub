@@ -18,7 +18,8 @@ import (
 var assets embed.FS
 
 type App struct {
-	settings *SettingsStore
+	settings  *SettingsStore
+	wailsApp  *application.App
 }
 
 func (a *App) ListTools() []ToolInfo {
@@ -92,11 +93,6 @@ func main() {
 	if err != nil {
 		log.Fatal("failed to initialize settings store:", err)
 	}
-
-	app := &App{settings: store}
-
-	// Start HTTP API server for frontend communication
-	app.startHTTPServer()
 
 	wailsApp := application.New(application.Options{
 		Name:        "CLI Hub",
@@ -176,6 +172,9 @@ func main() {
 			time.Sleep(time.Second)
 		}
 	}()
+
+	app := &App{settings: store, wailsApp: wailsApp}
+	app.startHTTPServer()
 
 	err = wailsApp.Run()
 	if err != nil {
