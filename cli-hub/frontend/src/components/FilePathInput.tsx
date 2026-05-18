@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { FolderOpen } from "lucide-react"
+import { Events } from "@wailsio/runtime"
 
 interface FilePathInputProps {
   id?: string
@@ -23,6 +24,27 @@ export function FilePathInput({
   const [dragOver, setDragOver] = useState(false)
   const [opening, setOpening] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const unsub = Events.On("common:WindowFilesDropped", (ev) => {
+      const data = ev.data as { filenames?: string[] } | undefined
+      if (data?.filenames && data.filenames.length > 0) {
+        onChange(data.filenames[0])
+      }
+    })
+    return () => unsub()
+  }, [onChange])
+
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const observer = new MutationObserver(() => {
+      setDragOver(el.classList.contains("file-drop-target-active"))
+    })
+    observer.observe(el, { attributes: true, attributeFilter: ["class"] })
+    return () => observer.disconnect()
+  }, [])
 
   const handleBrowse = useCallback(async () => {
     setOpening(true)
@@ -88,6 +110,8 @@ export function FilePathInput({
 
   return (
     <div
+      ref={wrapperRef}
+      data-file-drop-target="true"
       className={`relative flex gap-0 rounded-md border transition-colors duration-150 ${
         dragOver
           ? "border-accent bg-accent/10 ring-1 ring-accent/30"

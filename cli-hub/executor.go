@@ -9,8 +9,6 @@ import (
 	"regexp"
 	"sync"
 	"time"
-
-	"github.com/wailsapp/wails/v3/pkg/application"
 )
 
 // ExecuteResult is the summary returned after execution completes.
@@ -52,7 +50,7 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 		scanner := bufio.NewScanner(stdout)
 		for scanner.Scan() {
 			line := scanner.Text()
-			application.Get().Event.Emit("tool-output", map[string]any{
+			a.wailsApp.Event.Emit("tool-output", map[string]any{
 				"stream": "stdout",
 				"text":   line,
 			})
@@ -64,7 +62,7 @@ func (a *App) ExecuteTool(name string, params map[string]any) *ExecuteResult {
 		scanner := bufio.NewScanner(stderr)
 		for scanner.Scan() {
 			line := scanner.Text()
-			application.Get().Event.Emit("tool-output", map[string]any{
+			a.wailsApp.Event.Emit("tool-output", map[string]any{
 				"stream": "stderr",
 				"text":   line,
 			})

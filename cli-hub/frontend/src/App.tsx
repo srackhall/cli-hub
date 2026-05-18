@@ -52,6 +52,21 @@ export default function App() {
 
   useEffect(() => { loadTools() }, [loadTools])
 
+  useEffect(() => {
+    const prevent = (e: Event) => {
+      const de = e as DragEvent
+      if (de.dataTransfer?.types?.includes("Files")) {
+        e.preventDefault()
+      }
+    }
+    document.addEventListener("dragover", prevent)
+    document.addEventListener("drop", prevent)
+    return () => {
+      document.removeEventListener("dragover", prevent)
+      document.removeEventListener("drop", prevent)
+    }
+  }, [])
+
   return (
     <div className="flex flex-col h-screen overflow-hidden">
       {/* Top bar — macOS titlebar region */}
