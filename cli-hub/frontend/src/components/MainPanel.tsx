@@ -5,12 +5,11 @@ import { Badge } from "@/components/ui/badge"
 import { DynamicForm } from "@/components/DynamicForm"
 import { useLocale } from "@/hooks/useLocale"
 import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
-import * as WailsApp from "@bindings/changeme/app"
-import type { ToolSchema } from "@/types"
+import { api, type ToolSchema, type LogEntry } from "@/api"
 
 interface MainPanelProps {
   selectedTool: string | null
-  onLog: (entry: { stream: string; text: string; ts: number }) => void
+  onLog: (entry: LogEntry) => void
 }
 
 export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
@@ -31,7 +30,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
 
     async function load() {
       try {
-        const s = await WailsApp.GetSchema(selectedTool ?? "")
+        const s = await api.getSchema(selectedTool!)
         if (s) {
           setSchema(s as ToolSchema)
         }
@@ -60,7 +59,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setRunning(true)
     onLog({ stream: "stdout", text: t("console.starting", { tool: selectedTool }), ts: Date.now() })
     try {
-      const result = await WailsApp.ExecuteTool(selectedTool ?? "", values)
+      const result = await api.executeTool(selectedTool!, values)
       if (result && result.code === 0) {
         onLog({ stream: "stdout", text: t("console.success", { output: result.output }), ts: Date.now() })
       } else if (result) {

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
-import { Events } from "@wailsio/runtime"
 import { Sidebar } from "@/components/Sidebar"
 import { MainPanel } from "@/components/MainPanel"
 import { Console } from "@/components/Console"
@@ -11,8 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Wrench, SettingsIcon, Sun, Moon } from "lucide-react"
 import { useResizable } from "@/hooks/useResizable"
 import { useTheme } from "@/hooks/useTheme"
-import * as WailsApp from "@bindings/changeme/app"
-import type { ToolInfo, LogEntry } from "@/types"
+import { api, type ToolInfo, type LogEntry } from "@/api"
 import "@/i18n"
 
 type Page = "tools" | "settings"
@@ -32,50 +30,27 @@ export default function App() {
   const sidebar = useResizable({ defaultSize: 220, minSize: MIN_SIDEBAR, maxSize: MAX_SIDEBAR, axis: "x" })
   const consolePanel = useResizable({ defaultSize: 160, minSize: MIN_CONSOLE, maxSize: 500, axis: "y" })
 
-  const loadTools = useCallback(() => {
-    let cancelled = false
-    async function load() {
-      for (let attempt = 0; attempt < 5; attempt++) {
-        try {
-          const list = await WailsApp.ListTools()
-          console.log(`[loadTools] attempt ${attempt + 1}: got`, list, "type:", typeof list, "isArray:", Array.isArray(list), "length:", list?.length)
-          if (!cancelled) {
-            if (list && Array.isArray(list)) {
-              setTools(list)
-              setSelectedTool((prev) => {
-                if (list.length > 0 && !prev) return list[0].name
-                // If previously selected tool is no longer in list, clear selection
-                if (prev && !list.find((t: ToolInfo) => t.name === prev)) return list.length > 0 ? list[0].name : null
-                return prev
-              })
-              return
-            }
-            console.warn(`[loadTools] attempt ${attempt + 1}: list was falsy or not array, retrying...`)
-          }
-        } catch (e) {
-          console.error(`[loadTools] attempt ${attempt + 1} failed:`, e)
-        }
-        await new Promise((r) => setTimeout(r, 500))
-      }
-      // All retries exhausted — set empty list so UI shows "no tools" message
-      console.warn("[loadTools] all 5 attempts exhausted, setting empty tools")
-      if (!cancelled) {
+  const loadTools = useCallback(async () => {
+    try {
+      const list = await api.listTools()
+      console.log("[loadTools] got", list, "isArray:", Array.isArray(list), "length:", list?.length)
+      if (list && Array.isArray(list)) {
+        setTools(list)
+        setSelectedTool((prev) => {
+          if (list.length > 0 && !prev) return list[0].name
+          if (prev && !list.find((t) => t.name === prev)) return list.length > 0 ? list[0].name : null
+          return prev
+        })
+      } else {
         setTools([])
       }
+    } catch (e) {
+      console.error("[loadTools] failed:", e)
+      setTools([])
     }
-    load()
-    return () => { cancelled = true }
   }, [])
 
   useEffect(() => { loadTools() }, [loadTools])
-
-  useEffect(() => {
-    const unsub = Events.On("tool-output", (ev: { name: string; data: { stream: string; text: string } }) => {
-      const { stream, text } = ev.data
-      setLogs((prev) => [...prev, { stream: stream as "stdout" | "stderr", text, ts: Date.now() }])
-    })
-    return () => unsub()
-  }, [])
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -134,7 +109,7 @@ export default function App() {
             />
             <MainPanel
               selectedTool={selectedTool}
-              onLog={(entry) => setLogs((prev) => [...prev, entry as LogEntry])}
+              onLog={(entry: LogEntry) => setLogs((prev) => [...prev, entry])}
             />
           </div>
           <div

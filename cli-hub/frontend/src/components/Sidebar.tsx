@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useTranslation } from "react-i18next"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -6,9 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Search, Box, Plus, Trash2 } from "lucide-react"
 import { useLocale } from "@/hooks/useLocale"
-import { Dialogs } from "@wailsio/runtime"
-import * as WailsApp from "@bindings/changeme/app"
-import type { ToolInfo } from "@/types"
+import { api, type ToolInfo } from "@/api"
 
 interface SidebarProps {
   width: number
@@ -23,34 +21,36 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
   const { text } = useLocale()
   const [search, setSearch] = useState("")
   const [importing, setImporting] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const filtered = tools.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleImport = async () => {
+  const handleImport = () => {
+    fileInputRef.current?.click()
+  }
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
     setImporting(true)
     try {
-      const path = await Dialogs.OpenFile({
-        CanChooseFiles: true,
-        CanChooseDirectories: false,
-        AllowsMultipleSelection: false,
-      })
-      if (!path) return
-      await WailsApp.ImportTool(path as string)
+      await api.importTool(file)
       onRefreshTools()
     } catch (err) {
       console.error("Import failed:", err)
       window.alert(String(err))
     } finally {
       setImporting(false)
+      if (fileInputRef.current) fileInputRef.current.value = ""
     }
   }
 
   const handleDelete = async (name: string) => {
     if (!window.confirm(t("sidebar.deleteConfirm", { name }))) return
     try {
-      await WailsApp.DeleteTool(name)
+      await api.deleteTool(name)
       onRefreshTools()
     } catch (err) {
       console.error("Delete failed:", err)
@@ -70,6 +70,14 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
         borderRightColor: "var(--sidebar-glass-border)",
       }}
     >
+      {/* Hidden file input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
       {/* Header */}
       <div className="p-3 space-y-2.5 shrink-0">
         <div className="relative">

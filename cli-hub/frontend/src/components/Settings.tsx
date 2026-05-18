@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Save, FolderOpen, RefreshCw } from "lucide-react"
-import * as WailsApp from "@bindings/changeme/app"
+import { api } from "@/api"
 
 interface SettingsProps {
   onRefreshTools: () => void
@@ -16,19 +16,19 @@ export function Settings({ onRefreshTools }: SettingsProps) {
   const [saved, setSaved] = useState(false)
 
   useEffect(() => {
-    WailsApp.GetSettings().then((s) => {
+    api.getSettings().then((s) => {
       if (s) setCliPath(s.cliPath ?? "")
     })
   }, [])
 
   const handleSave = async () => {
-    await WailsApp.UpdateSettings({ cliPath })
+    await api.updateSettings({ cliPath })
     setSaved(true)
     setTimeout(() => setSaved(false), 2000)
   }
 
   const handleRefresh = async () => {
-    await WailsApp.RefreshTools()
+    await api.refreshTools()
     onRefreshTools()
   }
 
