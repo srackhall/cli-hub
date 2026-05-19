@@ -78,20 +78,17 @@ export function FilePathInput({
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
-    e.stopPropagation()
     setDragOver(true)
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
-    e.stopPropagation()
     setDragOver(false)
   }, [])
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
-      e.stopPropagation()
       setDragOver(false)
 
       const text = e.dataTransfer.getData("text/plain")

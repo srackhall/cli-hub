@@ -52,6 +52,39 @@ export default function App() {
 
   useEffect(() => { loadTools() }, [loadTools])
 
+  // Monkey-patch Wails native file drop to also dispatch a DOM event.
+  // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
+  // fires a DOM event, so React components can't hear it. We intercept the call
+  // and dispatch a "wails:filesdropped" CustomEvent on the drop target element.
+  useEffect(() => {
+    const w = window as Record<string, any>
+    const orig = w._wails?.handlePlatformFileDrop as
+      | ((filenames: string[], x: number, y: number) => void)
+      | undefined
+    if (!orig) return
+
+    w._wails.handlePlatformFileDrop = function (
+      filenames: string[],
+      x: number,
+      y: number,
+    ) {
+      orig.call(w._wails, filenames, x, y)
+      const el = document.elementFromPoint(x, y)
+      const target = el?.closest("[data-file-drop-target]")
+      if (target) {
+        target.dispatchEvent(
+          new CustomEvent("wails:filesdropped", {
+            bubbles: true,
+            detail: { files: filenames },
+          }),
+        )
+      }
+    }
+    return () => {
+      if (orig) w._wails.handlePlatformFileDrop = orig
+    }
+  }, [])
+
   useEffect(() => {
     const prevent = (e: Event) => {
       const de = e as DragEvent
