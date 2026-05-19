@@ -25,6 +25,9 @@ export function FilePathInput({
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
 
+  const onChangeRef = useRef(onChange)
+  onChangeRef.current = onChange
+
   useEffect(() => {
     const el = wrapperRef.current
     if (!el) return
@@ -34,13 +37,13 @@ export function FilePathInput({
         files?: string[]
       } | undefined
       if (detail?.files && detail.files.length > 0) {
-        onChange(detail.files[0])
+        onChangeRef.current(detail.files[0])
       }
     }
 
     el.addEventListener("wails:filesdropped", onFilesDropped)
     return () => el.removeEventListener("wails:filesdropped", onFilesDropped)
-  }, [onChange])
+  }, [])
 
   useEffect(() => {
     const el = wrapperRef.current

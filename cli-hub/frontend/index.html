@@ -19,6 +19,29 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Intercept Wails native file drop so React components can hear it.
+      // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
+      // fires a DOM event. We patch it once _wails is ready.
+      (function patch() {
+        var w = window._wails;
+        if (!w || !w.handlePlatformFileDrop) {
+          return setTimeout(patch, 5);
+        }
+        var orig = w.handlePlatformFileDrop;
+        w.handlePlatformFileDrop = function(filenames, x, y) {
+          orig.apply(w, arguments);
+          var el = document.elementFromPoint(x, y);
+          var target = el && el.closest('[data-file-drop-target]');
+          if (target) {
+            target.dispatchEvent(new CustomEvent('wails:filesdropped', {
+              bubbles: true,
+              detail: { files: filenames }
+            }));
+          }
+        };
+      })();
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
