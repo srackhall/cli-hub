@@ -161,9 +161,11 @@ func main() {
 			Backdrop:                application.MacBackdropTranslucent,
 			TitleBar:                application.MacTitleBarHiddenInset,
 		},
-		BackgroundColour: application.NewRGB(27, 38, 54),
-		URL:              "/",
-		EnableFileDrop:   true,
+		BackgroundColour:       application.NewRGB(27, 38, 54),
+		URL:                    "/",
+		EnableFileDrop:         true,
+		DevToolsEnabled:        devToolsEnabled,
+		OpenInspectorOnStartup: openInspectorOnStartup,
 	})
 
 	go func() {

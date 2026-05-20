@@ -24,7 +24,7 @@ jobs:
           node-version: "22"
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.94
 
       - name: Build macOS (arm64)
         working-directory: cli-hub
@@ -62,7 +62,7 @@ jobs:
           node-version: "22"
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.90
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-alpha.94
 
       - name: Build Windows (amd64)
         working-directory: cli-hub
@@ -74,4 +74,16 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cli-hub-windows-amd64
+          path: cli-hub/bin/cli-hub.exe
+
+      - name: Build Windows debug (amd64)
+        working-directory: cli-hub
+        run: |
+          $env:PATH = "$env:USERPROFILE\go\bin;$env:PATH"
+          wails3 build DEV=true EXTRA_TAGS=devtools
+
+      - name: Upload Windows debug artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-hub-windows-amd64-debug
           path: cli-hub/bin/cli-hub.exe
