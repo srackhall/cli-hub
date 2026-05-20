@@ -24,8 +24,20 @@
       // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
       // fires a DOM event. We patch it once _wails is ready.
       (function patch() {
+        var attempts = 0;
+        var MAX_POLL = 600; // ~3s at 5ms intervals
         var w = window._wails;
         if (!w || !w.handlePlatformFileDrop) {
+          if (attempts === 0) {
+            console.log('[DD] monkey-patch: waiting for window._wails.handlePlatformFileDrop...');
+          }
+          attempts++;
+          if (attempts > MAX_POLL) {
+            console.error('[DD] monkey-patch: TIMEOUT after 3s! window._wails=', window._wails, 'handlePlatformFileDrop=', window._wails && window._wails.handlePlatformFileDrop);
+            // Store diagnostic info on window for on-screen panel
+            window.__dd_patch_status = 'timeout';
+            return;
+          }
           return setTimeout(patch, 5);
         }
         console.log('[DD] monkey-patch: _wails.handlePlatformFileDrop found, patching...');

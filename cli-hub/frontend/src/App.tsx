@@ -5,6 +5,7 @@ import { MainPanel } from "@/components/MainPanel"
 import { Console } from "@/components/Console"
 import { StatusBar } from "@/components/StatusBar"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
+import { DragDiagnostic } from "@/components/DragDiagnostic"
 import { Settings } from "@/components/Settings"
 import { Button } from "@/components/ui/button"
 import { Wrench, SettingsIcon, Sun, Moon } from "lucide-react"
@@ -143,6 +144,7 @@ export default function App() {
       {(sidebar.dragging || consolePanel.dragging) && (
         <div className={`drag-overlay${consolePanel.dragging ? " drag-overlay-y" : ""}`} />
       )}
+      <DragDiagnostic />
     </div>
   )
 }
