@@ -97,6 +97,19 @@ export function FilePathInput({
       e.preventDefault()
       setDragOver(false)
 
+      // WebView2 supports the non-standard File.path (Chromium-based)
+      // which gives us the full filesystem path directly.
+      const file = e.dataTransfer.files?.[0]
+      if (file) {
+        const path = (file as any).path
+        if (path && typeof path === "string") {
+          console.log("[DD] FilePathInput got path from File.path:", path)
+          onChange(path)
+          return
+        }
+      }
+
+      // Fallback: text/plain for file:// URLs from external drag sources
       const text = e.dataTransfer.getData("text/plain")
       if (text) {
         const cleaned = text.trim().replace(/^file:\/\//, "")
