@@ -97,11 +97,32 @@ export function FilePathInput({
       e.preventDefault()
       setDragOver(false)
 
-      // WebView2 supports the non-standard File.path (Chromium-based)
-      // which gives us the full filesystem path directly.
-      const file = e.dataTransfer.files?.[0]
-      if (file) {
-        const path = (file as any).path
+      const fileList = e.dataTransfer.files
+      if (fileList && fileList.length > 0) {
+        // On Windows, call WebView2 postMessageWithAdditionalObjects directly
+        // to resolve full file paths. This bypasses the Wails runtime's
+        // canResolveFilePaths() gate which requires _wails.flags.enableFileDrop === true.
+        const wv = (window as any).chrome?.webview
+        if (wv?.postMessageWithAdditionalObjects) {
+          console.log(
+            "[DD] FilePathInput calling postMessageWithAdditionalObjects directly, files:",
+            fileList.length
+          )
+          const filesArr: File[] = []
+          for (let i = 0; i < fileList.length; i++) {
+            filesArr.push(fileList[i])
+          }
+          wv.postMessageWithAdditionalObjects(
+            `file:drop:${e.clientX}:${e.clientY}`,
+            filesArr
+          )
+          // Go backend will process and callback via
+          // handlePlatformFileDrop → monkey-patch → wails:filesdropped
+          return
+        }
+
+        // Fallback: try File.path (works in Electron, not WebView2)
+        const path = (fileList[0] as any).path
         if (path && typeof path === "string") {
           console.log("[DD] FilePathInput got path from File.path:", path)
           onChange(path)
@@ -109,7 +130,7 @@ export function FilePathInput({
         }
       }
 
-      // Fallback: text/plain for file:// URLs from external drag sources
+      // Last resort: text/plain for file:// URLs
       const text = e.dataTransfer.getData("text/plain")
       if (text) {
         const cleaned = text.trim().replace(/^file:\/\//, "")
