@@ -33,10 +33,13 @@ export function FilePathInput({
     if (!el) return
 
     const onFilesDropped = (e: Event) => {
+      console.log('[DD] FilePathInput received wails:filesdropped event', e);
       const detail = (e as CustomEvent).detail as {
         files?: string[]
       } | undefined
+      console.log('[DD] FilePathInput event detail:', detail);
       if (detail?.files && detail.files.length > 0) {
+        console.log('[DD] FilePathInput setting value to:', detail.files[0]);
         onChangeRef.current(detail.files[0])
       }
     }

@@ -28,18 +28,28 @@
         if (!w || !w.handlePlatformFileDrop) {
           return setTimeout(patch, 5);
         }
+        console.log('[DD] monkey-patch: _wails.handlePlatformFileDrop found, patching...');
+        console.log('[DD] monkey-patch: _wails.flags.enableFileDrop =', w.flags && w.flags.enableFileDrop);
+        console.log('[DD] monkey-patch: chrome.webview.postMessageWithAdditionalObjects =', !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects));
         var orig = w.handlePlatformFileDrop;
         w.handlePlatformFileDrop = function(filenames, x, y) {
+          console.log('[DD] handlePlatformFileDrop called! filenames:', filenames, 'x:', x, 'y:', y);
           orig.apply(w, arguments);
           var el = document.elementFromPoint(x, y);
+          console.log('[DD] elementFromPoint:', el);
           var target = el && el.closest('[data-file-drop-target]');
+          console.log('[DD] closest [data-file-drop-target]:', target);
           if (target) {
+            console.log('[DD] dispatching wails:filesdropped on target');
             target.dispatchEvent(new CustomEvent('wails:filesdropped', {
               bubbles: true,
               detail: { files: filenames }
             }));
+          } else {
+            console.log('[DD] NO drop target found at coordinates — check if [data-file-drop-target] is in DOM');
           }
         };
+        console.log('[DD] monkey-patch: complete');
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>
