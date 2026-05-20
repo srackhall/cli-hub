@@ -101,11 +101,17 @@ export const logger = {
 // Expose globally for console access
 ;(window as any).__logger = logger
 
-// Drain early logs captured by index.html monkey-patch
+// From this point forward, __log routes directly to the real logger
+;(window as any).__log = (level: LogLevel, msg: string) => logger[level](msg)
+
+// Drain any early logs buffered by index.html monkey-patch (pre-logger-load)
 const earlyLogs = (window as any).__earlyLogs as LogEntry[] | undefined
 if (earlyLogs && Array.isArray(earlyLogs) && earlyLogs.length > 0) {
+  logger.info(`logger: draining ${earlyLogs.length} early log entries`)
   for (const e of earlyLogs) {
     log(e.level, e.msg)
   }
 }
 delete (window as any).__earlyLogs
+
+logger.info('logger: module loaded')

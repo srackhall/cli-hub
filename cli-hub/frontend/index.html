@@ -20,10 +20,18 @@
   <body>
     <div id="root"></div>
     <script>
+      // Early log sink — routes to real logger if loaded, else buffers to __earlyLogs.
+      // This avoids the race between monkey-patch polling and logger.ts module load.
+      window.__earlyLogs = [];
+      window.__log = function(level, msg) {
+        var L = window.__logger;
+        if (L) { L[level](msg); return; }
+        window.__earlyLogs.push({ts: Date.now(), level: level, msg: msg});
+      };
+
       // Intercept Wails native file drop so React components can hear it.
       // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
       // fires a DOM event. We patch it once _wails is ready.
-      window.__earlyLogs = [];
       (function patch() {
         var attempts = 0;
         var MAX_POLL = 600;
@@ -31,27 +39,27 @@
         if (!w || !w.handlePlatformFileDrop) {
           attempts++;
           if (attempts > MAX_POLL) {
-            window.__earlyLogs.push({ts: Date.now(), level: 'error', msg: 'monkey-patch: TIMEOUT after 3s! _wails=' + JSON.stringify(window._wails)});
+            window.__log('error', 'monkey-patch: TIMEOUT after 3s! _wails=' + JSON.stringify(window._wails));
             window.__dd_patch_status = 'timeout';
             return;
           }
           return setTimeout(patch, 5);
         }
-        window.__earlyLogs.push({ts: Date.now(), level: 'info', msg: 'monkey-patch: _wails.handlePlatformFileDrop found, enableFileDrop=' + (w.flags && w.flags.enableFileDrop) + ' chrome.webview=' + !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects)});
+        window.__log('info', 'monkey-patch: _wails.handlePlatformFileDrop found, enableFileDrop=' + (w.flags && w.flags.enableFileDrop) + ' chrome.webview=' + !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects));
         var orig = w.handlePlatformFileDrop;
         w.handlePlatformFileDrop = function(filenames, x, y) {
-          window.__earlyLogs.push({ts: Date.now(), level: 'debug', msg: 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y});
+          window.__log('debug', 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y);
           orig.apply(w, arguments);
           var el = document.elementFromPoint(x, y);
           var target = el && el.closest('[data-file-drop-target]');
           if (target) {
-            window.__earlyLogs.push({ts: Date.now(), level: 'debug', msg: 'monkey-patch: dispatching wails:filesdropped on target'});
+            window.__log('debug', 'monkey-patch: dispatching wails:filesdropped on target');
             target.dispatchEvent(new CustomEvent('wails:filesdropped', {
               bubbles: true,
               detail: { files: filenames }
             }));
           } else {
-            window.__earlyLogs.push({ts: Date.now(), level: 'warn', msg: 'monkey-patch: NO drop target at coordinates x=' + x + ' y=' + y});
+            window.__log('warn', 'monkey-patch: NO drop target at coordinates x=' + x + ' y=' + y);
           }
         };
       })();
