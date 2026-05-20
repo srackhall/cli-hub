@@ -5,13 +5,13 @@ import { MainPanel } from "@/components/MainPanel"
 import { Console } from "@/components/Console"
 import { StatusBar } from "@/components/StatusBar"
 import { LanguageSwitcher } from "@/components/LanguageSwitcher"
-import { DragDiagnostic } from "@/components/DragDiagnostic"
 import { Settings } from "@/components/Settings"
 import { Button } from "@/components/ui/button"
 import { Wrench, SettingsIcon, Sun, Moon } from "lucide-react"
 import { useResizable } from "@/hooks/useResizable"
 import { useTheme } from "@/hooks/useTheme"
 import { api, type ToolInfo, type LogEntry } from "@/api"
+import { logger } from "@/logger"
 import "@/i18n"
 
 type Page = "tools" | "settings"
@@ -34,7 +34,7 @@ export default function App() {
   const loadTools = useCallback(async () => {
     try {
       const list = await api.listTools()
-      console.log("[loadTools] got", list, "isArray:", Array.isArray(list), "length:", list?.length)
+      logger.debug(`loadTools got ${list?.length ?? 0} tools`)
       if (list && Array.isArray(list)) {
         setTools(list)
         setSelectedTool((prev) => {
@@ -46,7 +46,7 @@ export default function App() {
         setTools([])
       }
     } catch (e) {
-      console.error("[loadTools] failed:", e)
+      logger.error(`loadTools failed: ${e}`)
       setTools([])
     }
   }, [])
@@ -144,7 +144,6 @@ export default function App() {
       {(sidebar.dragging || consolePanel.dragging) && (
         <div className={`drag-overlay${consolePanel.dragging ? " drag-overlay-y" : ""}`} />
       )}
-      <DragDiagnostic />
     </div>
   )
 }

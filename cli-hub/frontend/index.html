@@ -23,45 +23,37 @@
       // Intercept Wails native file drop so React components can hear it.
       // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
       // fires a DOM event. We patch it once _wails is ready.
+      window.__earlyLogs = [];
       (function patch() {
         var attempts = 0;
-        var MAX_POLL = 600; // ~3s at 5ms intervals
+        var MAX_POLL = 600;
         var w = window._wails;
         if (!w || !w.handlePlatformFileDrop) {
-          if (attempts === 0) {
-            console.log('[DD] monkey-patch: waiting for window._wails.handlePlatformFileDrop...');
-          }
           attempts++;
           if (attempts > MAX_POLL) {
-            console.error('[DD] monkey-patch: TIMEOUT after 3s! window._wails=', window._wails, 'handlePlatformFileDrop=', window._wails && window._wails.handlePlatformFileDrop);
-            // Store diagnostic info on window for on-screen panel
+            window.__earlyLogs.push({ts: Date.now(), level: 'error', msg: 'monkey-patch: TIMEOUT after 3s! _wails=' + JSON.stringify(window._wails)});
             window.__dd_patch_status = 'timeout';
             return;
           }
           return setTimeout(patch, 5);
         }
-        console.log('[DD] monkey-patch: _wails.handlePlatformFileDrop found, patching...');
-        console.log('[DD] monkey-patch: _wails.flags.enableFileDrop =', w.flags && w.flags.enableFileDrop);
-        console.log('[DD] monkey-patch: chrome.webview.postMessageWithAdditionalObjects =', !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects));
+        window.__earlyLogs.push({ts: Date.now(), level: 'info', msg: 'monkey-patch: _wails.handlePlatformFileDrop found, enableFileDrop=' + (w.flags && w.flags.enableFileDrop) + ' chrome.webview=' + !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects)});
         var orig = w.handlePlatformFileDrop;
         w.handlePlatformFileDrop = function(filenames, x, y) {
-          console.log('[DD] handlePlatformFileDrop called! filenames:', filenames, 'x:', x, 'y:', y);
+          window.__earlyLogs.push({ts: Date.now(), level: 'debug', msg: 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y});
           orig.apply(w, arguments);
           var el = document.elementFromPoint(x, y);
-          console.log('[DD] elementFromPoint:', el);
           var target = el && el.closest('[data-file-drop-target]');
-          console.log('[DD] closest [data-file-drop-target]:', target);
           if (target) {
-            console.log('[DD] dispatching wails:filesdropped on target');
+            window.__earlyLogs.push({ts: Date.now(), level: 'debug', msg: 'monkey-patch: dispatching wails:filesdropped on target'});
             target.dispatchEvent(new CustomEvent('wails:filesdropped', {
               bubbles: true,
               detail: { files: filenames }
             }));
           } else {
-            console.log('[DD] NO drop target found at coordinates — check if [data-file-drop-target] is in DOM');
+            window.__earlyLogs.push({ts: Date.now(), level: 'warn', msg: 'monkey-patch: NO drop target at coordinates x=' + x + ' y=' + y});
           }
         };
-        console.log('[DD] monkey-patch: complete');
       })();
     </script>
     <script type="module" src="/src/main.tsx"></script>

@@ -176,6 +176,9 @@ func main() {
 		}
 	}()
 
+	InitLogger(appDir, devToolsEnabled)
+	LogInfof("app starting exePath=%s", exePath)
+
 	app := &App{settings: store, wailsApp: wailsApp}
 	app.startHTTPServer()
 

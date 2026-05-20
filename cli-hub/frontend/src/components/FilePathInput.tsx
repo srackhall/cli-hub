@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { FolderOpen } from "lucide-react"
+import { logger } from "@/logger"
 
 interface FilePathInputProps {
   id?: string
@@ -33,13 +34,12 @@ export function FilePathInput({
     if (!el) return
 
     const onFilesDropped = (e: Event) => {
-      console.log('[DD] FilePathInput received wails:filesdropped event', e);
       const detail = (e as CustomEvent).detail as {
         files?: string[]
       } | undefined
-      console.log('[DD] FilePathInput event detail:', detail);
+      logger.debug(`FilePathInput wails:filesdropped files=${JSON.stringify(detail?.files)}`)
       if (detail?.files && detail.files.length > 0) {
-        console.log('[DD] FilePathInput setting value to:', detail.files[0]);
+        logger.info(`FilePathInput drop path resolved: ${detail.files[0]}`)
         onChangeRef.current(detail.files[0])
       }
     }
@@ -76,7 +76,7 @@ export function FilePathInput({
         onChange(data.path)
       }
     } catch (err) {
-      console.error("File dialog failed:", err)
+      logger.error(`File dialog failed: ${err}`)
     } finally {
       setOpening(false)
     }
@@ -99,15 +99,9 @@ export function FilePathInput({
 
       const fileList = e.dataTransfer.files
       if (fileList && fileList.length > 0) {
-        // On Windows, call WebView2 postMessageWithAdditionalObjects directly
-        // to resolve full file paths. This bypasses the Wails runtime's
-        // canResolveFilePaths() gate which requires _wails.flags.enableFileDrop === true.
         const wv = (window as any).chrome?.webview
         if (wv?.postMessageWithAdditionalObjects) {
-          console.log(
-            "[DD] FilePathInput calling postMessageWithAdditionalObjects directly, files:",
-            fileList.length
-          )
+          logger.debug(`FilePathInput handleDrop: calling postMessageWithAdditionalObjects, fileCount=${fileList.length}`)
           const filesArr: File[] = []
           for (let i = 0; i < fileList.length; i++) {
             filesArr.push(fileList[i])
@@ -116,24 +110,25 @@ export function FilePathInput({
             `file:drop:${e.clientX}:${e.clientY}`,
             filesArr
           )
-          // Go backend will process and callback via
-          // handlePlatformFileDrop → monkey-patch → wails:filesdropped
           return
         }
 
         // Fallback: try File.path (works in Electron, not WebView2)
         const path = (fileList[0] as any).path
         if (path && typeof path === "string") {
-          console.log("[DD] FilePathInput got path from File.path:", path)
+          logger.info(`FilePathInput handleDrop: got path from File.path: ${path}`)
           onChange(path)
           return
         }
+
+        logger.warn(`FilePathInput handleDrop: postMessageWithAdditionalObjects unavailable, File.path=${(fileList[0] as any)?.path || "N/A"}`)
       }
 
       // Last resort: text/plain for file:// URLs
       const text = e.dataTransfer.getData("text/plain")
       if (text) {
         const cleaned = text.trim().replace(/^file:\/\//, "")
+        logger.info(`FilePathInput handleDrop: resolved from text/plain: ${cleaned}`)
         onChange(cleaned)
       }
     },

@@ -86,6 +86,14 @@ func (a *App) startHTTPServer() {
 		}
 	})
 
+	mux.HandleFunc("/api/logs", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			http.Error(w, "method not allowed", 405)
+			return
+		}
+		a.handlePostLogs(w, r)
+	})
+
 	handler := corsMiddleware(mux)
 
 	go func() {
@@ -266,4 +274,31 @@ func (a *App) handleOpenDirectoryDialog(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	writeJSON(w, map[string]any{"path": result})
+}
+
+func (a *App) handlePostLogs(w http.ResponseWriter, r *http.Request) {
+	var entries []struct {
+		Ts    int64  `json:"ts"`
+		Level string `json:"level"`
+		Msg   string `json:"msg"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&entries); err != nil {
+		http.Error(w, "invalid JSON body", 400)
+		return
+	}
+	for _, e := range entries {
+		switch e.Level {
+		case "debug":
+			LogDebugf("[frontend] %s", e.Msg)
+		case "info":
+			LogInfof("[frontend] %s", e.Msg)
+		case "warn":
+			LogWarnf("[frontend] %s", e.Msg)
+		case "error":
+			LogErrorf("[frontend] %s", e.Msg)
+		default:
+			LogInfof("[frontend] %s", e.Msg)
+		}
+	}
+	writeJSON(w, map[string]any{"status": "ok"})
 }
