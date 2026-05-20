@@ -94,6 +94,10 @@ func (a *App) startHTTPServer() {
 		a.handlePostLogs(w, r)
 	})
 
+	mux.HandleFunc("/api/logs/hello", func(w http.ResponseWriter, r *http.Request) {
+		writeJSON(w, map[string]any{"status": "ok"})
+	})
+
 	handler := corsMiddleware(mux)
 
 	go func() {
