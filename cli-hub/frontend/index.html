@@ -31,38 +31,23 @@
 
       // Intercept Wails native file drop so React components can hear it.
       // Wails' HandlePlatformFileDrop only does an RPC callback to Go — it never
-      // fires a DOM event. We patch it once _wails is ready.
-      (function patch() {
-        var attempts = 0;
-        var MAX_POLL = 600;
-        var w = window._wails;
-        if (!w || !w.handlePlatformFileDrop) {
-          attempts++;
-          if (attempts > MAX_POLL) {
-            window.__log('error', 'monkey-patch: TIMEOUT after 3s! _wails=' + JSON.stringify(window._wails));
-            window.__dd_patch_status = 'timeout';
-            return;
-          }
-          return setTimeout(patch, 5);
+      // fires a DOM event. Go calls execJS("window._wails.handlePlatformFileDrop(...)")
+      // so we create it proactively (no polling needed).
+      window._wails = window._wails || {};
+      window._wails.handlePlatformFileDrop = function(filenames, x, y) {
+        window.__log('debug', 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y);
+        var el = document.elementFromPoint(x, y);
+        var target = el && el.closest('[data-file-drop-target]');
+        if (target) {
+          window.__log('debug', 'handlePlatformFileDrop: dispatching wails:filesdropped on target');
+          target.dispatchEvent(new CustomEvent('wails:filesdropped', {
+            bubbles: true,
+            detail: { files: filenames }
+          }));
+        } else {
+          window.__log('warn', 'handlePlatformFileDrop: NO drop target at x=' + x + ' y=' + y);
         }
-        window.__log('info', 'monkey-patch: _wails.handlePlatformFileDrop found, enableFileDrop=' + (w.flags && w.flags.enableFileDrop) + ' chrome.webview=' + !!(window.chrome && window.chrome.webview && window.chrome.webview.postMessageWithAdditionalObjects));
-        var orig = w.handlePlatformFileDrop;
-        w.handlePlatformFileDrop = function(filenames, x, y) {
-          window.__log('debug', 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y);
-          orig.apply(w, arguments);
-          var el = document.elementFromPoint(x, y);
-          var target = el && el.closest('[data-file-drop-target]');
-          if (target) {
-            window.__log('debug', 'monkey-patch: dispatching wails:filesdropped on target');
-            target.dispatchEvent(new CustomEvent('wails:filesdropped', {
-              bubbles: true,
-              detail: { files: filenames }
-            }));
-          } else {
-            window.__log('warn', 'monkey-patch: NO drop target at coordinates x=' + x + ' y=' + y);
-          }
-        };
-      })();
+      };
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
