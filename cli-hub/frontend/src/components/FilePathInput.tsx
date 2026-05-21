@@ -98,8 +98,36 @@ export function FilePathInput({
       e.stopPropagation()
       setDragOver(false)
 
-      // text/uri-list — most reliable cross-platform path source
-      const uriList = e.dataTransfer.getData("text/uri-list")
+      const dt = e.dataTransfer
+      const types = dt.types
+      logger.info(`FilePathInput drop: types=${JSON.stringify(types)}, files=${dt.files.length}`)
+
+      // Dump all available data for diagnosis
+      for (const t of types) {
+        try {
+          const data = dt.getData(t)
+          logger.info(`FilePathInput drop: getData("${t}") = ${JSON.stringify(data.slice(0, 500))}`)
+        } catch (err) {
+          logger.info(`FilePathInput drop: getData("${t}") threw: ${err}`)
+        }
+      }
+
+      // Also dump the items/entries
+      if (dt.items) {
+        for (let i = 0; i < dt.items.length; i++) {
+          const item = dt.items[i]
+          logger.info(`FilePathInput drop: items[${i}] kind=${item.kind} type=${item.type}`)
+        }
+      }
+
+      // For each file, dump everything we can
+      for (let i = 0; i < dt.files.length; i++) {
+        const f = dt.files[i] as any
+        logger.info(`FilePathInput drop: files[${i}] name=${f.name} size=${f.size} type=${f.type} lastModified=${f.lastModified} path=${f.path} fullPath=${f.fullPath} webkitRelativePath=${f.webkitRelativePath}`)
+      }
+
+      // Try to resolve path from text/uri-list
+      const uriList = dt.getData("text/uri-list")
       if (uriList) {
         const cleaned = decodeURIComponent(uriList.trim().split(/[\r\n]+/)[0].replace(/^file:\/\/\/?/i, ""))
         logger.info(`FilePathInput drop: resolved from text/uri-list: ${cleaned}`)
@@ -107,8 +135,8 @@ export function FilePathInput({
         return
       }
 
-      // text/plain fallback
-      const plain = e.dataTransfer.getData("text/plain")
+      // Try text/plain (may contain file:// URL or path)
+      const plain = dt.getData("text/plain")
       if (plain) {
         const cleaned = plain.trim().replace(/^file:\/\/\/?/i, "")
         logger.info(`FilePathInput drop: resolved from text/plain: ${cleaned}`)
@@ -116,32 +144,7 @@ export function FilePathInput({
         return
       }
 
-      // HTML5 File objects — try path (Electron) or name-only (WebView2)
-      const files = e.dataTransfer.files
-      if (files && files.length > 0) {
-        const path = (files[0] as any).path
-        if (path && typeof path === "string") {
-          logger.info(`FilePathInput drop: resolved from File.path: ${path}`)
-          onChange(path)
-          return
-        }
-
-        // WebView2: postMessageWithAdditionalObjects for full paths (async, result via wails:filesdropped event)
-        const wv = (window as any).chrome?.webview
-        if (wv?.postMessageWithAdditionalObjects) {
-          logger.debug(`FilePathInput drop: trying postMessageWithAdditionalObjects, fileCount=${files.length}`)
-          try {
-            const filesArr: File[] = []
-            for (let i = 0; i < files.length; i++) filesArr.push(files[i])
-            wv.postMessageWithAdditionalObjects(`file:drop:${e.clientX}:${e.clientY}`, filesArr)
-          } catch (err) {
-            logger.error(`FilePathInput drop: postMessageWithAdditionalObjects threw: ${err}`)
-          }
-          return
-        }
-
-        logger.warn(`FilePathInput drop: no path resolution available, file.name=${files[0].name}`)
-      }
+      logger.warn(`FilePathInput drop: no path could be resolved from DataTransfer`)
     },
     [onChange]
   )
