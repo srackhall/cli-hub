@@ -95,41 +95,52 @@ export function FilePathInput({
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
+      e.stopPropagation()
       setDragOver(false)
 
-      const fileList = e.dataTransfer.files
-      if (fileList && fileList.length > 0) {
-        const wv = (window as any).chrome?.webview
-        if (wv?.postMessageWithAdditionalObjects) {
-          logger.debug(`FilePathInput handleDrop: calling postMessageWithAdditionalObjects, fileCount=${fileList.length}`)
-          const filesArr: File[] = []
-          for (let i = 0; i < fileList.length; i++) {
-            filesArr.push(fileList[i])
-          }
-          wv.postMessageWithAdditionalObjects(
-            `file:drop:${e.clientX}:${e.clientY}`,
-            filesArr
-          )
-          return
-        }
+      // text/uri-list — most reliable cross-platform path source
+      const uriList = e.dataTransfer.getData("text/uri-list")
+      if (uriList) {
+        const cleaned = decodeURIComponent(uriList.trim().split(/[\r\n]+/)[0].replace(/^file:\/\/\/?/i, ""))
+        logger.info(`FilePathInput drop: resolved from text/uri-list: ${cleaned}`)
+        onChange(cleaned)
+        return
+      }
 
-        // Fallback: try File.path (works in Electron, not WebView2)
-        const path = (fileList[0] as any).path
+      // text/plain fallback
+      const plain = e.dataTransfer.getData("text/plain")
+      if (plain) {
+        const cleaned = plain.trim().replace(/^file:\/\/\/?/i, "")
+        logger.info(`FilePathInput drop: resolved from text/plain: ${cleaned}`)
+        onChange(cleaned)
+        return
+      }
+
+      // HTML5 File objects — try path (Electron) or name-only (WebView2)
+      const files = e.dataTransfer.files
+      if (files && files.length > 0) {
+        const path = (files[0] as any).path
         if (path && typeof path === "string") {
-          logger.info(`FilePathInput handleDrop: got path from File.path: ${path}`)
+          logger.info(`FilePathInput drop: resolved from File.path: ${path}`)
           onChange(path)
           return
         }
 
-        logger.warn(`FilePathInput handleDrop: postMessageWithAdditionalObjects unavailable, File.path=${(fileList[0] as any)?.path || "N/A"}`)
-      }
+        // WebView2: postMessageWithAdditionalObjects for full paths (async, result via wails:filesdropped event)
+        const wv = (window as any).chrome?.webview
+        if (wv?.postMessageWithAdditionalObjects) {
+          logger.debug(`FilePathInput drop: trying postMessageWithAdditionalObjects, fileCount=${files.length}`)
+          try {
+            const filesArr: File[] = []
+            for (let i = 0; i < files.length; i++) filesArr.push(files[i])
+            wv.postMessageWithAdditionalObjects(`file:drop:${e.clientX}:${e.clientY}`, filesArr)
+          } catch (err) {
+            logger.error(`FilePathInput drop: postMessageWithAdditionalObjects threw: ${err}`)
+          }
+          return
+        }
 
-      // Last resort: text/plain for file:// URLs
-      const text = e.dataTransfer.getData("text/plain")
-      if (text) {
-        const cleaned = text.trim().replace(/^file:\/\//, "")
-        logger.info(`FilePathInput handleDrop: resolved from text/plain: ${cleaned}`)
-        onChange(cleaned)
+        logger.warn(`FilePathInput drop: no path resolution available, file.name=${files[0].name}`)
       }
     },
     [onChange]
