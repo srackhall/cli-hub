@@ -95,58 +95,14 @@ export function FilePathInput({
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault()
-      e.stopPropagation()
       setDragOver(false)
-
-      const dt = e.dataTransfer
-      const types = dt.types
-      logger.info(`FilePathInput drop: types=${JSON.stringify(types)}, files=${dt.files.length}`)
-
-      // Dump all available data for diagnosis
-      for (const t of types) {
-        try {
-          const data = dt.getData(t)
-          logger.info(`FilePathInput drop: getData("${t}") = ${JSON.stringify(data.slice(0, 500))}`)
-        } catch (err) {
-          logger.info(`FilePathInput drop: getData("${t}") threw: ${err}`)
-        }
-      }
-
-      // Also dump the items/entries
-      if (dt.items) {
-        for (let i = 0; i < dt.items.length; i++) {
-          const item = dt.items[i]
-          logger.info(`FilePathInput drop: items[${i}] kind=${item.kind} type=${item.type}`)
-        }
-      }
-
-      // For each file, dump everything we can
-      for (let i = 0; i < dt.files.length; i++) {
-        const f = dt.files[i] as any
-        logger.info(`FilePathInput drop: files[${i}] name=${f.name} size=${f.size} type=${f.type} lastModified=${f.lastModified} path=${f.path} fullPath=${f.fullPath} webkitRelativePath=${f.webkitRelativePath}`)
-      }
-
-      // Try to resolve path from text/uri-list
-      const uriList = dt.getData("text/uri-list")
-      if (uriList) {
-        const cleaned = decodeURIComponent(uriList.trim().split(/[\r\n]+/)[0].replace(/^file:\/\/\/?/i, ""))
-        logger.info(`FilePathInput drop: resolved from text/uri-list: ${cleaned}`)
-        onChange(cleaned)
-        return
-      }
-
-      // Try text/plain (may contain file:// URL or path)
-      const plain = dt.getData("text/plain")
-      if (plain) {
-        const cleaned = plain.trim().replace(/^file:\/\/\/?/i, "")
-        logger.info(`FilePathInput drop: resolved from text/plain: ${cleaned}`)
-        onChange(cleaned)
-        return
-      }
-
-      logger.warn(`FilePathInput drop: no path could be resolved from DataTransfer`)
+      // Do NOT stopPropagation — Wails runtime listens on docElement
+      // and its handler calls postMessageWithAdditionalObjects to get
+      // full filesystem paths from Go. We receive the result via the
+      // wails:filesdropped CustomEvent listener below.
+      logger.debug(`FilePathInput drop: types=${JSON.stringify(e.dataTransfer.types)}, files=${e.dataTransfer.files.length}`)
     },
-    [onChange]
+    []
   )
 
   return (
