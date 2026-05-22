@@ -96,11 +96,31 @@ export function FilePathInput({
     (e: React.DragEvent) => {
       e.preventDefault()
       setDragOver(false)
-      // Do NOT stopPropagation — Wails runtime listens on docElement
-      // and its handler calls postMessageWithAdditionalObjects to get
-      // full filesystem paths from Go. We receive the result via the
-      // wails:filesdropped CustomEvent listener below.
       logger.debug(`FilePathInput drop: types=${JSON.stringify(e.dataTransfer.types)}, files=${e.dataTransfer.files.length}`)
+
+      // Wails runtime's canResolveFilePaths() may return false if flags
+      // haven't been synced yet. Try direct postMessageWithAdditionalObjects
+      // as fallback to get full filesystem paths from Go.
+      const wv = (window as any).chrome?.webview
+      if (wv?.postMessageWithAdditionalObjects) {
+        const files: File[] = []
+        if (e.dataTransfer.items) {
+          for (const item of e.dataTransfer.items) {
+            if (item.kind === 'file') {
+              const file = item.getAsFile()
+              if (file) files.push(file)
+            }
+          }
+        } else if (e.dataTransfer.files) {
+          for (const file of e.dataTransfer.files) {
+            files.push(file)
+          }
+        }
+        logger.debug(`FilePathInput fallback: sending ${files.length} files via postMessageWithAdditionalObjects at (${e.clientX}, ${e.clientY})`)
+        wv.postMessageWithAdditionalObjects(`file:drop:${e.clientX}:${e.clientY}`, files)
+      } else {
+        logger.warn(`FilePathInput: postMessageWithAdditionalObjects not available, cannot resolve paths`)
+      }
     },
     []
   )
