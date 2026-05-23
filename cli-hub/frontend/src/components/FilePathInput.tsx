@@ -101,37 +101,65 @@ export function FilePathInput({
       // elementFromPoint fails due to coordinate mismatches (HiDPI, etc.)
       ;(window as any).__lastDropTarget = wrapperRef.current
 
-      // Direct fallback: bypass Wails runtime and call postMessageWithAdditionalObjects
-      // directly. The Wails runtime docElement drop handler may fail to trigger Go
-      // callback (observed on Windows where handlePlatformFileDrop is never invoked).
-      const wv = (window as any).chrome?.webview
-      if (wv?.postMessageWithAdditionalObjects) {
-        const files: File[] = []
-        if (e.dataTransfer.items) {
-          for (const item of e.dataTransfer.items) {
-            if (item.kind === "file") {
-              const file = item.getAsFile()
-              if (file) files.push(file)
-            }
-          }
-        } else if (e.dataTransfer.files) {
-          for (const file of e.dataTransfer.files) {
-            files.push(file)
+      // Collect File objects from DataTransfer
+      const files: File[] = []
+      if (e.dataTransfer.items) {
+        for (const item of e.dataTransfer.items) {
+          if (item.kind === "file") {
+            const file = item.getAsFile()
+            if (file) files.push(file)
           }
         }
-        if (files.length > 0) {
+      } else if (e.dataTransfer.files) {
+        for (const file of e.dataTransfer.files) {
+          files.push(file)
+        }
+      }
+
+      if (files.length > 0) {
+        // Enumerate ALL properties on the File object to discover any
+        // non-standard path property that WebView2 might expose directly.
+        const fileProps: Record<string, unknown> = {}
+        for (const key of Object.getOwnPropertyNames(files[0])) {
+          try {
+            fileProps[key] = (files[0] as any)[key]
+          } catch (_) {}
+        }
+        // Also check prototype chain
+        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(files[0]))) {
+          if (key === "constructor") continue
+          try {
+            fileProps[key] = (files[0] as any)[key]
+          } catch (_) {}
+        }
+        logger.debug(
+          `FilePathInput drop: files=${files.length} props=${JSON.stringify(fileProps)}`
+        )
+
+        // Try known non-standard path properties first
+        const f = files[0] as any
+        const directPath = f.path || f.fullPath || f.filePath || f.filesystemPath || f.nativePath || f.localPath || f.osPath
+        if (directPath) {
+          logger.info(`FilePathInput drop: direct path found: ${directPath}`)
+          onChangeRef.current(directPath)
+          return
+        }
+
+        // Fallback: try WebView2 postMessage pipeline
+        const wv = (window as any).chrome?.webview
+        if (wv?.postMessageWithAdditionalObjects) {
           logger.debug(
-            `FilePathInput drop: direct postMessageWithAdditionalObjects files=${files.length} types=${JSON.stringify(e.dataTransfer.types)}`
+            `FilePathInput drop: direct postMessageWithAdditionalObjects files=${files.length}`
           )
           wv.postMessageWithAdditionalObjects(
             `file:drop:${e.clientX}:${e.clientY}`,
             files
           )
+        } else {
+          logger.debug(
+            `FilePathInput drop: no path resolution available, types=${JSON.stringify(e.dataTransfer.types)}`
+          )
         }
-      } else {
-        logger.debug(
-          `FilePathInput drop: types=${JSON.stringify(e.dataTransfer.types)}, files=${e.dataTransfer.files.length}`
-        )
       }
     },
     []

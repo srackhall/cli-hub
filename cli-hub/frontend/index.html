@@ -28,6 +28,7 @@
         if (L) { L[level](msg); return; }
         window.__earlyLogs.push({ts: Date.now(), level: level, msg: msg});
       };
+      window.__log('info', 'BUILD: 2026-05-23-v3 file-props-enum');
 
       // Pre-set flags the Wails runtime checks before Go-side execJS syncs them.
       // Without this, canResolveFilePaths() returns false due to a race between
