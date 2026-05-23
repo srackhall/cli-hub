@@ -101,7 +101,38 @@ export function FilePathInput({
       // elementFromPoint fails due to coordinate mismatches (HiDPI, etc.)
       ;(window as any).__lastDropTarget = wrapperRef.current
 
-      logger.debug(`FilePathInput drop: types=${JSON.stringify(e.dataTransfer.types)}, files=${e.dataTransfer.files.length}`)
+      // Direct fallback: bypass Wails runtime and call postMessageWithAdditionalObjects
+      // directly. The Wails runtime docElement drop handler may fail to trigger Go
+      // callback (observed on Windows where handlePlatformFileDrop is never invoked).
+      const wv = (window as any).chrome?.webview
+      if (wv?.postMessageWithAdditionalObjects) {
+        const files: File[] = []
+        if (e.dataTransfer.items) {
+          for (const item of e.dataTransfer.items) {
+            if (item.kind === "file") {
+              const file = item.getAsFile()
+              if (file) files.push(file)
+            }
+          }
+        } else if (e.dataTransfer.files) {
+          for (const file of e.dataTransfer.files) {
+            files.push(file)
+          }
+        }
+        if (files.length > 0) {
+          logger.debug(
+            `FilePathInput drop: direct postMessageWithAdditionalObjects files=${files.length} types=${JSON.stringify(e.dataTransfer.types)}`
+          )
+          wv.postMessageWithAdditionalObjects(
+            `file:drop:${e.clientX}:${e.clientY}`,
+            files
+          )
+        }
+      } else {
+        logger.debug(
+          `FilePathInput drop: types=${JSON.stringify(e.dataTransfer.types)}, files=${e.dataTransfer.files.length}`
+        )
+      }
     },
     []
   )
