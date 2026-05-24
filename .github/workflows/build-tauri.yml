@@ -10,6 +10,8 @@ on:
 jobs:
   build-macos:
     runs-on: macos-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +27,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: cli-hub-tauri
-        run: npm install
+        run: npm ci
 
       - name: Build Tauri (macOS arm64)
         uses: tauri-apps/tauri-action@v0
@@ -39,7 +41,8 @@ jobs:
           APPLE_TEAM_ID: ""
         with:
           projectPath: cli-hub-tauri
-          args: --target aarch64-apple-darwin
+          args: --target aarch64-apple-darwin --verbose
+          retryAttempts: 2
 
       - name: Upload macOS artifact
         uses: actions/upload-artifact@v4
@@ -51,6 +54,8 @@ jobs:
 
   build-windows:
     runs-on: windows-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
@@ -66,7 +71,7 @@ jobs:
 
       - name: Install frontend dependencies
         working-directory: cli-hub-tauri
-        run: npm install
+        run: npm ci
 
       - name: Build Tauri (Windows amd64)
         uses: tauri-apps/tauri-action@v0
@@ -74,7 +79,8 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: cli-hub-tauri
-          args: --target x86_64-pc-windows-msvc
+          args: --target x86_64-pc-windows-msvc --verbose
+          retryAttempts: 2
 
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
