@@ -1,5 +1,4 @@
 {
-  "$schema": "https://raw.githubusercontent.com/nicoverbruggen/tauri-docs/refs/heads/dev/src/static/schemas/config.schema.json",
   "productName": "CLI Hub",
   "version": "0.1.0",
   "identifier": "com.cli-hub.app",
