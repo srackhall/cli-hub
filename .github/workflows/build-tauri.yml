@@ -20,6 +20,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
 
       - name: Install frontend dependencies
         working-directory: cli-hub-tauri
@@ -39,7 +41,7 @@ jobs:
           name: cli-hub-tauri-macos-arm64
           path: |
             cli-hub-tauri/src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/*.dmg
-            cli-hub-tauri/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app/**/*
+            cli-hub-tauri/src-tauri/target/aarch64-apple-darwin/release/bundle/macos/*.app
 
   build-windows:
     runs-on: windows-latest
@@ -53,6 +55,8 @@ jobs:
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
 
       - name: Install frontend dependencies
         working-directory: cli-hub-tauri
