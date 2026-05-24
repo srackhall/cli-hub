@@ -85,6 +85,7 @@ export function FilePathInput({
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     setDragOver(true)
+    inputRef.current?.focus()
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
@@ -101,7 +102,8 @@ export function FilePathInput({
       // elementFromPoint fails due to coordinate mismatches (HiDPI, etc.)
       ;(window as any).__lastDropTarget = wrapperRef.current
 
-      // Collect File objects from DataTransfer
+      // Try direct path properties first (WebView2 doesn't expose these,
+      // but other platforms or future versions might)
       const files: File[] = []
       if (e.dataTransfer.items) {
         for (const item of e.dataTransfer.items) {
@@ -117,26 +119,6 @@ export function FilePathInput({
       }
 
       if (files.length > 0) {
-        // Enumerate ALL properties on the File object to discover any
-        // non-standard path property that WebView2 might expose directly.
-        const fileProps: Record<string, unknown> = {}
-        for (const key of Object.getOwnPropertyNames(files[0])) {
-          try {
-            fileProps[key] = (files[0] as any)[key]
-          } catch (_) {}
-        }
-        // Also check prototype chain
-        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(files[0]))) {
-          if (key === "constructor") continue
-          try {
-            fileProps[key] = (files[0] as any)[key]
-          } catch (_) {}
-        }
-        logger.debug(
-          `FilePathInput drop: files=${files.length} props=${JSON.stringify(fileProps)}`
-        )
-
-        // Try known non-standard path properties first
         const f = files[0] as any
         const directPath = f.path || f.fullPath || f.filePath || f.filesystemPath || f.nativePath || f.localPath || f.osPath
         if (directPath) {
@@ -145,22 +127,27 @@ export function FilePathInput({
           return
         }
 
-        // Fallback: try WebView2 postMessage pipeline
+        // Route via WebView2 postMessageWithAdditionalObjects to get the
+        // precise filesystem path from ICoreWebView2File.GetPath().
+        // Wails runtime's setupDropTargetListeners also calls this on docElement
+        // drops, but calling it here directly reduces latency.
         const wv = (window as any).chrome?.webview
         if (wv?.postMessageWithAdditionalObjects) {
-          logger.debug(
-            `FilePathInput drop: direct postMessageWithAdditionalObjects files=${files.length}`
-          )
+          logger.info(`FilePathInput drop: calling postMessageWithAdditionalObjects`)
           wv.postMessageWithAdditionalObjects(
             `file:drop:${e.clientX}:${e.clientY}`,
             files
           )
         } else {
-          logger.debug(
-            `FilePathInput drop: no path resolution available, types=${JSON.stringify(e.dataTransfer.types)}`
-          )
+          logger.warn(`FilePathInput drop: postMessageWithAdditionalObjects unavailable`)
         }
       }
+
+      // Wails runtime's setupDropTargetListeners (window.js) handles the
+      // postMessageWithAdditionalObjects → Go → handlePlatformFileDrop pipeline.
+      // Our monkey-patched handlePlatformFileDrop (index.html) uses
+      // __lastDropTarget as a coordinate fallback and dispatches
+      // wails:filesdropped on this component.
     },
     []
   )

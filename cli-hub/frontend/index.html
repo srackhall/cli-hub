@@ -28,7 +28,7 @@
         if (L) { L[level](msg); return; }
         window.__earlyLogs.push({ts: Date.now(), level: level, msg: msg});
       };
-      window.__log('info', 'BUILD: 2026-05-23-v3 file-props-enum');
+      window.__log('info', 'BUILD: 2026-05-24-v6 postmessage');
 
       // Pre-set flags the Wails runtime checks before Go-side execJS syncs them.
       // Without this, canResolveFilePaths() returns false due to a race between
@@ -42,17 +42,17 @@
       // We must provide this function. Wails runtime (index.ts:74) will try to overwrite
       // it with its own RPC-only version, so we use defineProperty to trap assignments.
       var ourHandler = function(filenames, x, y) {
-        window.__log('debug', 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y);
+        window.__log('info', 'handlePlatformFileDrop called filenames=' + JSON.stringify(filenames) + ' x=' + x + ' y=' + y);
         var el = document.elementFromPoint(x, y);
         var target = el && el.closest('[data-file-drop-target]');
         // Fallback: use the last cached drop target if elementFromPoint misses
         if (!target && window.__lastDropTarget) {
-          window.__log('debug', 'handlePlatformFileDrop: elementFromPoint missed, using __lastDropTarget fallback');
+          window.__log('info', 'handlePlatformFileDrop: elementFromPoint missed, using __lastDropTarget fallback');
           target = window.__lastDropTarget;
           delete window.__lastDropTarget;
         }
         if (target) {
-          window.__log('debug', 'handlePlatformFileDrop: dispatching wails:filesdropped on target');
+          window.__log('info', 'handlePlatformFileDrop: dispatching wails:filesdropped on target');
           target.dispatchEvent(new CustomEvent('wails:filesdropped', {
             bubbles: true,
             detail: { files: filenames }
