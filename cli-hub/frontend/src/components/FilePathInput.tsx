@@ -102,52 +102,42 @@ export function FilePathInput({
       // elementFromPoint fails due to coordinate mismatches (HiDPI, etc.)
       ;(window as any).__lastDropTarget = wrapperRef.current
 
-      // Try direct path properties first (WebView2 doesn't expose these,
-      // but other platforms or future versions might)
-      const files: File[] = []
-      if (e.dataTransfer.items) {
-        for (const item of e.dataTransfer.items) {
-          if (item.kind === "file") {
-            const file = item.getAsFile()
-            if (file) files.push(file)
+      // On macOS (WKWebView), do NOT touch DataTransfer — let the event
+      // bubble to Wails' native drop handler which resolves paths via Cocoa.
+      // Calling getAsFile() here consumes the DataTransferItemList and
+      // prevents Wails from obtaining file references.
+      const wv = (window as any).chrome?.webview
+      if (wv?.postMessageWithAdditionalObjects) {
+        const files: File[] = []
+        if (e.dataTransfer.items) {
+          for (const item of e.dataTransfer.items) {
+            if (item.kind === "file") {
+              const file = item.getAsFile()
+              if (file) files.push(file)
+            }
+          }
+        } else if (e.dataTransfer.files) {
+          for (const file of e.dataTransfer.files) {
+            files.push(file)
           }
         }
-      } else if (e.dataTransfer.files) {
-        for (const file of e.dataTransfer.files) {
-          files.push(file)
-        }
-      }
 
-      if (files.length > 0) {
-        const f = files[0] as any
-        const directPath = f.path || f.fullPath || f.filePath || f.filesystemPath || f.nativePath || f.localPath || f.osPath
-        if (directPath) {
-          logger.info(`FilePathInput drop: direct path found: ${directPath}`)
-          onChangeRef.current(directPath)
-          return
-        }
+        if (files.length > 0) {
+          const f = files[0] as any
+          const directPath = f.path || f.fullPath || f.filePath || f.filesystemPath || f.nativePath || f.localPath || f.osPath
+          if (directPath) {
+            logger.info(`FilePathInput drop: direct path found: ${directPath}`)
+            onChangeRef.current(directPath)
+            return
+          }
 
-        // Route via WebView2 postMessageWithAdditionalObjects to get the
-        // precise filesystem path from ICoreWebView2File.GetPath().
-        // Wails runtime's setupDropTargetListeners also calls this on docElement
-        // drops, but calling it here directly reduces latency.
-        const wv = (window as any).chrome?.webview
-        if (wv?.postMessageWithAdditionalObjects) {
           logger.info(`FilePathInput drop: calling postMessageWithAdditionalObjects`)
           wv.postMessageWithAdditionalObjects(
             `file:drop:${e.clientX}:${e.clientY}`,
             files
           )
-        } else {
-          logger.warn(`FilePathInput drop: postMessageWithAdditionalObjects unavailable`)
         }
       }
-
-      // Wails runtime's setupDropTargetListeners (window.js) handles the
-      // postMessageWithAdditionalObjects → Go → handlePlatformFileDrop pipeline.
-      // Our monkey-patched handlePlatformFileDrop (index.html) uses
-      // __lastDropTarget as a coordinate fallback and dispatches
-      // wails:filesdropped on this component.
     },
     []
   )
