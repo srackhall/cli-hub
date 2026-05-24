@@ -6,6 +6,10 @@
 
 This repo uses [`superpowers-bridge`](https://github.com/JiangWay/openspec-schemas/tree/main/superpowers-bridge) to bridge OpenSpec and Superpowers. Integration rules (language, artifact paths, PRECHECK) follow that bridge's README; this section is the routing guidance for Claude.
 
+### Build testing policy
+
+Never run `wails3 build` or any production build locally for testing purposes. Local builds consume significant compute resources. All build verification happens through GitHub Actions CI — push to GitHub and let Actions produce the artifact, then a human downloads and tests it. `npm run dev` / `wails3 dev` for development is fine.
+
 ### Entry routing
 
 | Trigger you observe | What to do |
