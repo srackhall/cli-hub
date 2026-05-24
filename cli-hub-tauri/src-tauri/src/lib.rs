@@ -5,6 +5,20 @@ mod settings;
 use settings::SettingsStore;
 use tauri::Manager;
 
+fn init_logging(app_dir: &std::path::Path) {
+    let log_file = std::fs::File::create(app_dir.join("app.log")).expect("failed to create log file");
+    let subscriber = tracing_subscriber::fmt()
+        .with_writer(std::sync::Mutex::new(log_file))
+        .with_ansi(false)
+        .with_target(false)
+        .with_level(true)
+        .compact()
+        .try_init();
+    if subscriber.is_ok() {
+        tracing::info!("日志系统已启动");
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -20,6 +34,8 @@ pub fn run() {
             let store = SettingsStore::new(&app_dir);
             let tools_dir = store.get_tools_dir();
             std::fs::create_dir_all(&tools_dir).ok();
+
+            init_logging(&app_dir);
 
             app.manage(store);
             Ok(())
