@@ -36,8 +36,8 @@ export function FilePathInput({
   onChangeRef.current = onChange
 
   useEffect(() => {
-    const unlisten = listen<string[]>("tauri://drag-drop", (event) => {
-      const paths = event.payload
+    const unlisten = listen<{ type: string; paths?: string[]; position?: { x: number; y: number } }>("tauri://drag-drop", (event) => {
+      const paths = event.payload.paths
       if (paths && paths.length > 0 && wrapperRef.current === activeDropWrapper) {
         onChangeRef.current(paths[0])
       }
@@ -56,22 +56,20 @@ export function FilePathInput({
       activeDropWrapper = el
       setDragOver(true)
     }
-    const onDragLeave = () => {
-      if (activeDropWrapper === el) activeDropWrapper = null
-      setDragOver(false)
-    }
-    const onDrop = () => {
-      if (activeDropWrapper === el) activeDropWrapper = null
-      setDragOver(false)
+    const onDragLeave = (e: DragEvent) => {
+      // Only clear when actually leaving the wrapper (not entering a child)
+      const related = e.relatedTarget as Node | null
+      if (e.target === el && !(related && el.contains(related))) {
+        activeDropWrapper = null
+        setDragOver(false)
+      }
     }
 
     el.addEventListener("dragover", onDragOver)
     el.addEventListener("dragleave", onDragLeave)
-    el.addEventListener("drop", onDrop)
     return () => {
       el.removeEventListener("dragover", onDragOver)
       el.removeEventListener("dragleave", onDragLeave)
-      el.removeEventListener("drop", onDrop)
     }
   }, [])
 
