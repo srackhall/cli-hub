@@ -14,6 +14,11 @@ interface FilePathInputProps {
   className?: string
 }
 
+// Tracks which FilePathInput wrapper the user is currently dragging over.
+// When the native tauri://drag-drop event fires, only the active instance
+// updates its value — avoiding cross-instance contamination.
+let activeDropWrapper: HTMLDivElement | null = null
+
 export function FilePathInput({
   id,
   value,
@@ -33,9 +38,10 @@ export function FilePathInput({
   useEffect(() => {
     const unlisten = listen<string[]>("tauri://drag-drop", (event) => {
       const paths = event.payload
-      if (paths && paths.length > 0) {
+      if (paths && paths.length > 0 && wrapperRef.current === activeDropWrapper) {
         onChangeRef.current(paths[0])
       }
+      activeDropWrapper = null
     })
     return () => {
       unlisten.then((fn) => fn())
@@ -46,14 +52,26 @@ export function FilePathInput({
     const el = wrapperRef.current
     if (!el) return
 
-    const onDragOver = () => setDragOver(true)
-    const onDragLeave = () => setDragOver(false)
+    const onDragOver = () => {
+      activeDropWrapper = el
+      setDragOver(true)
+    }
+    const onDragLeave = () => {
+      if (activeDropWrapper === el) activeDropWrapper = null
+      setDragOver(false)
+    }
+    const onDrop = () => {
+      if (activeDropWrapper === el) activeDropWrapper = null
+      setDragOver(false)
+    }
 
     el.addEventListener("dragover", onDragOver)
     el.addEventListener("dragleave", onDragLeave)
+    el.addEventListener("drop", onDrop)
     return () => {
       el.removeEventListener("dragover", onDragOver)
       el.removeEventListener("dragleave", onDragLeave)
+      el.removeEventListener("drop", onDrop)
     }
   }, [])
 
