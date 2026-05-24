@@ -25,7 +25,13 @@ fn build_args(params: &HashMap<String, serde_json::Value>) -> Vec<String> {
     for (k, v) in params {
         let is_valid = k
             .chars()
-            .all(|c| c.is_alphanumeric() || c == '-' || c == '.');
+            .next()
+            .map(|first| first.is_alphabetic())
+            .unwrap_or(false)
+            && k
+                .chars()
+                .skip(1)
+                .all(|c| c.is_alphanumeric() || c == '-' || c == '.');
         if !is_valid {
             continue;
         }
