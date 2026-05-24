@@ -1,5 +1,6 @@
 mod commands;
 mod executor;
+mod log;
 mod settings;
 
 use settings::SettingsStore;
@@ -50,6 +51,7 @@ pub fn run() {
             commands::settings::update_settings,
             commands::settings::get_tools_dir,
             executor::execute_tool,
+            log::log_frontend,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
