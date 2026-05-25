@@ -28,7 +28,10 @@ const registry = new Map<string, InputRef>()
 let dragOverTargetId: string | null = null
 
 function findTargetId(x: number, y: number): string | null {
-  const el = document.elementFromPoint(x, y)
+  // onDragDropEvent returns physical pixels; document.elementFromPoint
+  // expects CSS pixels. Scale down by devicePixelRatio.
+  const scale = window.devicePixelRatio || 1
+  const el = document.elementFromPoint(x / scale, y / scale)
   if (!el) return null
   for (const [id, ref] of registry) {
     if (ref.el.contains(el)) return id

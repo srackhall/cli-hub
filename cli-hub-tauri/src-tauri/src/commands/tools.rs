@@ -5,6 +5,12 @@ use tauri::State;
 
 use crate::settings::SettingsStore;
 
+#[cfg(target_os = "windows")]
+use std::os::windows::process::CommandExt;
+
+#[cfg(target_os = "windows")]
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ToolInfo {
     pub name: String,
@@ -114,6 +120,18 @@ fn validate_tool_name(name: &str) -> bool {
         .unwrap_or(false)
 }
 
+fn run_tool_command(path: &PathBuf, arg: &str) -> std::io::Result<std::process::Output> {
+    let mut cmd = std::process::Command::new(path);
+    cmd.arg(arg);
+    cmd.stdout(std::process::Stdio::piped());
+    cmd.stderr(std::process::Stdio::piped());
+    #[cfg(target_os = "windows")]
+    {
+        cmd.creation_flags(CREATE_NO_WINDOW);
+    }
+    cmd.output()
+}
+
 #[tauri::command]
 pub fn list_tools(store: State<SettingsStore>) -> Vec<ToolInfo> {
     let tools_dir = store.get_tools_dir();
@@ -144,19 +162,13 @@ pub fn list_tools(store: State<SettingsStore>) -> Vec<ToolInfo> {
             error: String::new(),
         };
 
-        if let Ok(output) = std::process::Command::new(&path)
-            .arg("--version")
-            .output()
-        {
+        if let Ok(output) = run_tool_command(&path, "--version") {
             if output.status.success() {
                 tool.version = String::from_utf8_lossy(&output.stdout).trim().to_string();
             }
         }
 
-        match std::process::Command::new(&path)
-            .arg("--schema")
-            .output()
-        {
+        match run_tool_command(&path, "--schema") {
             Ok(output) if output.status.success() => {
                 let json_str = String::from_utf8_lossy(&output.stdout);
                 match serde_json::from_str::<ToolSchema>(&json_str) {
@@ -199,10 +211,7 @@ pub fn get_tool_schema(store: State<SettingsStore>, name: String) -> Option<Tool
     if !tool_path.exists() {
         return None;
     }
-    let output = std::process::Command::new(&tool_path)
-        .arg("--schema")
-        .output()
-        .ok()?;
+    let output = run_tool_command(&tool_path, "--schema").ok()?;
     if !output.status.success() {
         return None;
     }
