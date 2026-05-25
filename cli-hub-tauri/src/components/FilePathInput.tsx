@@ -42,26 +42,26 @@ function ensureGlobalListener() {
   listenerInstalled = true
 
   getCurrentWebviewWindow().onDragDropEvent((event) => {
-    const { type, paths, position } = event.payload
+    const { payload } = event
 
-    if (type === "over" && position) {
+    if (payload.type === "over") {
       if (dragOverTargetId) {
         registry.get(dragOverTargetId)?.setDragOver(false)
       }
-      dragOverTargetId = findTargetId(position.x, position.y)
+      dragOverTargetId = findTargetId(payload.position.x, payload.position.y)
       if (dragOverTargetId) {
         registry.get(dragOverTargetId)?.setDragOver(true)
       }
-    } else if (type === "drop" && position) {
+    } else if (payload.type === "drop") {
       if (dragOverTargetId) {
         registry.get(dragOverTargetId)?.setDragOver(false)
       }
-      const targetId = findTargetId(position.x, position.y)
-      if (targetId && paths?.length) {
-        registry.get(targetId)?.onChange(paths[0])
+      const targetId = findTargetId(payload.position.x, payload.position.y)
+      if (targetId && payload.paths.length > 0) {
+        registry.get(targetId)?.onChange(payload.paths[0])
       }
       dragOverTargetId = null
-    } else if (type === "leave") {
+    } else if (payload.type === "leave") {
       if (dragOverTargetId) {
         registry.get(dragOverTargetId)?.setDragOver(false)
         dragOverTargetId = null
