@@ -14,10 +14,61 @@ interface FilePathInputProps {
   className?: string
 }
 
-// Tracks which FilePathInput the cursor is over during a native drag.
-// onDragDropEvent fires window-wide, so we use this to route the
-// dropped file path to the correct input instance.
-let activeDropWrapper: HTMLDivElement | null = null
+type InputRef = {
+  el: HTMLDivElement
+  setDragOver: (v: boolean) => void
+  onChange: (v: string) => void
+}
+
+// Registry of all mounted FilePathInput wrappers for position-based hit testing.
+// With dragDropEnabled: true, Tauri intercepts all native drag events — no DOM
+// drag events fire. We use the (x,y) position from onDragDropEvent to find
+// which wrapper element the cursor is over via document.elementFromPoint.
+const registry = new Map<string, InputRef>()
+let dragOverTargetId: string | null = null
+
+function findTargetId(x: number, y: number): string | null {
+  const el = document.elementFromPoint(x, y)
+  if (!el) return null
+  for (const [id, ref] of registry) {
+    if (ref.el.contains(el)) return id
+  }
+  return null
+}
+
+let listenerInstalled = false
+function ensureGlobalListener() {
+  if (listenerInstalled) return
+  listenerInstalled = true
+
+  getCurrentWebviewWindow().onDragDropEvent((event) => {
+    const { type, paths, position } = event.payload
+
+    if (type === "over" && position) {
+      if (dragOverTargetId) {
+        registry.get(dragOverTargetId)?.setDragOver(false)
+      }
+      dragOverTargetId = findTargetId(position.x, position.y)
+      if (dragOverTargetId) {
+        registry.get(dragOverTargetId)?.setDragOver(true)
+      }
+    } else if (type === "drop" && position) {
+      if (dragOverTargetId) {
+        registry.get(dragOverTargetId)?.setDragOver(false)
+      }
+      const targetId = findTargetId(position.x, position.y)
+      if (targetId && paths?.length) {
+        registry.get(targetId)?.onChange(paths[0])
+      }
+      dragOverTargetId = null
+    } else if (type === "leave") {
+      if (dragOverTargetId) {
+        registry.get(dragOverTargetId)?.setDragOver(false)
+        dragOverTargetId = null
+      }
+    }
+  })
+}
 
 export function FilePathInput({
   id,
@@ -31,56 +82,22 @@ export function FilePathInput({
   const [opening, setOpening] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapperRef = useRef<HTMLDivElement>(null)
+  const instanceId = useRef(`fpi-${crypto.randomUUID()}`)
 
-  const onChangeRef = useRef(onChange)
-  onChangeRef.current = onChange
+  useEffect(() => { ensureGlobalListener() }, [])
 
-  // Native file-drop listener via the v2 onDragDropEvent API.
-  // Required on Windows (WebView2) — the generic listen("tauri://drag-drop")
-  // does not receive file paths there.
   useEffect(() => {
-    let unlistenFn: (() => void) | null = null
-    const appWindow = getCurrentWebviewWindow()
-    appWindow.onDragDropEvent((event) => {
-      if (event.payload.type === "drop" && event.payload.paths?.length) {
-        if (wrapperRef.current === activeDropWrapper) {
-          onChangeRef.current(event.payload.paths[0])
-        }
-        activeDropWrapper = null
-      }
-    }).then((fn) => { unlistenFn = fn })
-
-    return () => { unlistenFn?.() }
-  }, [])
-
-  // Track which wrapper the cursor is over via native DOM events.
-  // We avoid React synthetic events here because they can interfere
-  // with WebView2's drag-drop event sequencing on Windows.
-  useEffect(() => {
-    const el = wrapperRef.current
-    if (!el) return
-
-    const onDragOver = () => {
-      activeDropWrapper = el
-      setDragOver(true)
-    }
-    const onDragLeave = (e: DragEvent) => {
-      // Only clear when actually leaving the wrapper, not when the
-      // cursor moves into a child element (Input / Button).
-      const related = e.relatedTarget as Node | null
-      if (e.target === el && !(related && el.contains(related))) {
-        activeDropWrapper = null
-        setDragOver(false)
-      }
-    }
-
-    el.addEventListener("dragover", onDragOver)
-    el.addEventListener("dragleave", onDragLeave)
+    const id = instanceId.current
+    registry.set(id, {
+      el: wrapperRef.current!,
+      setDragOver,
+      onChange,
+    })
     return () => {
-      el.removeEventListener("dragover", onDragOver)
-      el.removeEventListener("dragleave", onDragLeave)
+      registry.delete(id)
+      if (dragOverTargetId === id) dragOverTargetId = null
     }
-  }, [])
+  }, [onChange])
 
   const handleBrowse = useCallback(async () => {
     setOpening(true)
@@ -100,22 +117,6 @@ export function FilePathInput({
     }
   }, [isDirectory, onChange])
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(true)
-    inputRef.current?.focus()
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setDragOver(false)
-  }, [])
-
   return (
     <div
       ref={wrapperRef}
@@ -124,9 +125,6 @@ export function FilePathInput({
           ? "border-accent bg-accent/10 ring-1 ring-accent/30"
           : "border-input"
       }`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
     >
       <Input
         ref={inputRef}
