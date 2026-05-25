@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { FolderOpen } from "lucide-react"
 import { open } from "@tauri-apps/plugin-dialog"
-import { listen } from "@tauri-apps/api/event"
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 
 interface FilePathInputProps {
   id?: string
@@ -14,9 +14,9 @@ interface FilePathInputProps {
   className?: string
 }
 
-// Tracks which FilePathInput wrapper the user is currently dragging over.
-// When the native tauri://drag-drop event fires, only the active instance
-// updates its value — avoiding cross-instance contamination.
+// Tracks which FilePathInput the cursor is over during a native drag.
+// onDragDropEvent fires window-wide, so we use this to route the
+// dropped file path to the correct input instance.
 let activeDropWrapper: HTMLDivElement | null = null
 
 export function FilePathInput({
@@ -35,19 +35,27 @@ export function FilePathInput({
   const onChangeRef = useRef(onChange)
   onChangeRef.current = onChange
 
+  // Native file-drop listener via the v2 onDragDropEvent API.
+  // Required on Windows (WebView2) — the generic listen("tauri://drag-drop")
+  // does not receive file paths there.
   useEffect(() => {
-    const unlisten = listen<{ type: string; paths?: string[]; position?: { x: number; y: number } }>("tauri://drag-drop", (event) => {
-      const paths = event.payload.paths
-      if (paths && paths.length > 0 && wrapperRef.current === activeDropWrapper) {
-        onChangeRef.current(paths[0])
+    let unlistenFn: (() => void) | null = null
+    const appWindow = getCurrentWebviewWindow()
+    appWindow.onDragDropEvent((event) => {
+      if (event.payload.type === "drop" && event.payload.paths?.length) {
+        if (wrapperRef.current === activeDropWrapper) {
+          onChangeRef.current(event.payload.paths[0])
+        }
+        activeDropWrapper = null
       }
-      activeDropWrapper = null
-    })
-    return () => {
-      unlisten.then((fn) => fn())
-    }
+    }).then((fn) => { unlistenFn = fn })
+
+    return () => { unlistenFn?.() }
   }, [])
 
+  // Track which wrapper the cursor is over via native DOM events.
+  // We avoid React synthetic events here because they can interfere
+  // with WebView2's drag-drop event sequencing on Windows.
   useEffect(() => {
     const el = wrapperRef.current
     if (!el) return
@@ -57,7 +65,8 @@ export function FilePathInput({
       setDragOver(true)
     }
     const onDragLeave = (e: DragEvent) => {
-      // Only clear when actually leaving the wrapper (not entering a child)
+      // Only clear when actually leaving the wrapper, not when the
+      // cursor moves into a child element (Input / Button).
       const related = e.relatedTarget as Node | null
       if (e.target === el && !(related && el.contains(related))) {
         activeDropWrapper = null
