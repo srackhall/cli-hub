@@ -81,7 +81,7 @@ jobs:
           if-no-files-found: error
 
       - name: List build outputs (debug)
-        run: ls -la cli-hub-tauri/src-tauri/target/x86_64-pc-windows-msvc/release/cli-hub-tauri.exe 2>&1 || echo "not found at expected path"
+        run: Get-ChildItem cli-hub-tauri/src-tauri/target/x86_64-pc-windows-msvc/release/cli-hub-tauri.exe -ErrorAction SilentlyContinue || echo "not found at expected path"
 
       - name: Upload Windows Portable artifact (raw binary)
         uses: actions/upload-artifact@v4
