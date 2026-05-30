@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { FolderOpen } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { open } from "@tauri-apps/plugin-dialog"
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow"
 
@@ -81,6 +82,7 @@ export function FilePathInput({
   isDirectory = false,
   className,
 }: FilePathInputProps) {
+  const { t } = useTranslation()
   const [dragOver, setDragOver] = useState(false)
   const [opening, setOpening] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -108,7 +110,7 @@ export function FilePathInput({
       const result = await open({
         directory: isDirectory,
         multiple: false,
-        title: isDirectory ? "选择目录" : "选择文件",
+        title: isDirectory ? t("dialog.selectDir") : t("dialog.selectFile"),
       })
       if (result) {
         onChange(result as string)
@@ -118,7 +120,7 @@ export function FilePathInput({
     } finally {
       setOpening(false)
     }
-  }, [isDirectory, onChange])
+  }, [isDirectory, onChange, t])
 
   return (
     <div
@@ -144,7 +146,7 @@ export function FilePathInput({
         className="h-8 w-8 shrink-0 rounded-l-none border-l rounded-md rounded-l-none"
         onClick={handleBrowse}
         disabled={opening}
-        title={isDirectory ? "浏览目录..." : "浏览文件..."}
+        title={isDirectory ? t("sidebar.browseDir") : t("sidebar.browseFile")}
       >
         <FolderOpen className={`h-3.5 w-3.5 ${opening ? "animate-pulse" : ""}`} />
       </Button>

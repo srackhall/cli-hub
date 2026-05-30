@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { DynamicForm } from "@/components/DynamicForm"
 import { Play, RotateCcw, ChevronLeft, ChevronRight } from "lucide-react"
+import { useTranslation } from "react-i18next"
+import { useLocalizedSchema } from "@/i18n/useLocalizedSchema"
 import { api, type ToolSchema, type LogEntry } from "@/api"
 
 interface MainPanelProps {
@@ -11,10 +13,13 @@ interface MainPanelProps {
 }
 
 export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
+  const { t } = useTranslation()
   const [schema, setSchema] = useState<ToolSchema | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [currentStep, setCurrentStep] = useState(0)
   const [running, setRunning] = useState(false)
+
+  const localized = useLocalizedSchema(schema)
 
   useEffect(() => {
     if (!selectedTool) {
@@ -40,29 +45,29 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
   }, [selectedTool])
 
   const steps = useMemo(() => {
-    if (!schema?.properties) return null
-    const xsteps = schema["x-steps"]
+    if (!localized?.properties) return null
+    const xsteps = localized["x-steps"]
     if (!xsteps || xsteps.length === 0) {
-      return [{ title: "参数", title_zh: "参数", fields: Object.keys(schema.properties) }]
+      return [{ title: t("main.defaultStepTitle"), title_zh: t("main.defaultStepTitle"), fields: Object.keys(localized.properties) }]
     }
     return xsteps
-  }, [schema])
+  }, [localized, t])
 
   const currentFields = steps?.[currentStep]?.fields ?? []
 
   const handleExecute = async () => {
     if (!selectedTool) return
     setRunning(true)
-    onLog({ stream: "stdout", text: `启动 ${selectedTool}...`, ts: Date.now() })
+    onLog({ stream: "stdout", text: t("main.startLog", { name: selectedTool }), ts: Date.now() })
     try {
       const result = await api.executeTool(selectedTool!, values)
       if (result && result.code === 0) {
-        onLog({ stream: "stdout", text: `成功 (${result.output})`, ts: Date.now() })
+        onLog({ stream: "stdout", text: t("main.successLog", { output: result.output }), ts: Date.now() })
       } else if (result) {
-        onLog({ stream: "stderr", text: `错误 [code ${result.code}]: ${result.output}`, ts: Date.now() })
+        onLog({ stream: "stderr", text: t("main.errorLog", { code: result.code, output: result.output }), ts: Date.now() })
       }
     } catch (e) {
-      onLog({ stream: "stderr", text: `执行失败: ${String(e)}`, ts: Date.now() })
+      onLog({ stream: "stderr", text: t("main.execErrorLog", { error: String(e) }), ts: Date.now() })
     }
     setRunning(false)
   }
@@ -72,9 +77,9 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setCurrentStep(0)
   }
 
-  const toolTitle = schema?.title_zh || schema?.title || selectedTool
-  const toolDesc = schema?.description_zh || schema?.description
-  const toolLongDesc = schema?.long_description_zh || schema?.long_description
+  const toolTitle = localized?.title || selectedTool
+  const toolDesc = localized?.description
+  const toolLongDesc = localized?.long_description
 
   if (!selectedTool) {
     return (
@@ -83,16 +88,16 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
           <div className="w-12 h-12 rounded-xl bg-accent/50 mx-auto mb-4 flex items-center justify-center">
             <Play className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">从侧边栏选择一个工具开始使用。</p>
+          <p className="text-sm text-muted-foreground leading-relaxed">{t("main.selectTool")}</p>
         </div>
       </div>
     )
   }
 
-  if (!schema) {
+  if (!localized) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <p className="text-sm text-muted-foreground animate-pulse">加载中...</p>
+        <p className="text-sm text-muted-foreground animate-pulse">{t("main.loading")}</p>
       </div>
     )
   }
@@ -127,7 +132,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
                 }`}
                 onClick={() => idx < currentStep && setCurrentStep(idx)}
               >
-                {step.title_zh || step.title}
+                {step.title}
               </button>
             </div>
           ))}
@@ -156,12 +161,12 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
           {steps && currentStep > 0 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s - 1)}>
               <ChevronLeft className="h-4 w-4 mr-1" />
-              上一步
+              {t("main.previousStep")}
             </Button>
           )}
           {steps && currentStep < steps.length - 1 && (
             <Button variant="outline" size="sm" onClick={() => setCurrentStep((s) => s + 1)}>
-              下一步
+              {t("main.nextStep")}
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           )}
@@ -169,7 +174,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-1" />
-            重置
+            {t("main.reset")}
           </Button>
           <Button
             size="sm"
@@ -178,7 +183,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
             className="bg-accent hover:bg-accent/90 text-accent-foreground font-medium px-4"
           >
             <Play className="h-4 w-4 mr-1.5" />
-            {running ? "运行中..." : "执行"}
+            {running ? t("main.running") : t("main.execute")}
           </Button>
         </div>
       </div>

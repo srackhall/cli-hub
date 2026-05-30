@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Search, Box, Plus, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import { open } from "@tauri-apps/plugin-dialog"
 import { api, type ToolInfo } from "@/api"
 
@@ -16,6 +17,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshTools }: SidebarProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState("")
   const [importing, setImporting] = useState(false)
 
@@ -28,7 +30,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
     try {
       const result = await open({
         multiple: false,
-        title: "导入 CLI 工具",
+        title: t("dialog.importTitle"),
       })
       if (result) {
         await api.importTool(result as string)
@@ -43,7 +45,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
   }
 
   const handleDelete = async (name: string) => {
-    if (!window.confirm(`从 CLI Hub 移除 ${name}？此操作仅删除工具目录中的副本。`)) return
+    if (!window.confirm(t("dialog.deleteConfirm", { name }))) return
     try {
       await api.deleteTool(name)
       onRefreshTools()
@@ -69,7 +71,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/60" />
           <Input
-            placeholder="搜索工具..."
+            placeholder={t("sidebar.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-8 h-8 text-xs bg-foreground/[0.06] border-foreground/[0.08] focus-visible:bg-foreground/[0.10]"
@@ -83,7 +85,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
           disabled={importing}
         >
           <Plus className="h-3.5 w-3.5 mr-1.5" />
-          {importing ? "..." : "导入"}
+          {importing ? t("sidebar.importing") : t("sidebar.import")}
         </Button>
       </div>
 
@@ -116,7 +118,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
               </div>
               {!tool.ready && (
                 <Badge variant="destructive" className="ml-auto shrink-0 text-[9px] px-1.5 py-0 h-4 opacity-70">
-                  错误
+                  {t("sidebar.error")}
                 </Badge>
               )}
               <Button
@@ -127,7 +129,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
                   e.stopPropagation()
                   handleDelete(tool.name)
                 }}
-                title="删除工具"
+                title={t("sidebar.delete")}
               >
                 <Trash2 className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-destructive transition-colors" />
               </Button>
@@ -135,7 +137,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
           )})}
           {filtered.length === 0 && (
             <p className="text-xs text-muted-foreground/60 text-center py-8 px-2 leading-relaxed">
-              {tools.length === 0 ? "还没有导入工具。使用 + 按钮导入 CLI 工具二进制文件。" : "无匹配结果"}
+              {tools.length === 0 ? t("sidebar.noTools") : t("sidebar.noMatch")}
             </p>
           )}
         </div>

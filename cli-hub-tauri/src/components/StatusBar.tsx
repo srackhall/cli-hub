@@ -1,4 +1,5 @@
 import { CheckCircle2, AlertCircle, Folder } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 interface StatusBarProps {
   toolCount: number
@@ -6,6 +7,7 @@ interface StatusBarProps {
 }
 
 export function StatusBar({ toolCount, readyCount }: StatusBarProps) {
+  const { t } = useTranslation()
   const allReady = toolCount > 0 && readyCount === toolCount
 
   return (
@@ -14,7 +16,7 @@ export function StatusBar({ toolCount, readyCount }: StatusBarProps) {
         <Folder className="h-3 w-3" />
         <span>cli/</span>
         <span className="text-muted-foreground/50">
-          {toolCount} 个工具
+          {t("statusBar.toolCount", { count: toolCount })}
         </span>
       </span>
       {toolCount > 0 && (
@@ -22,13 +24,13 @@ export function StatusBar({ toolCount, readyCount }: StatusBarProps) {
           {allReady ? (
             <>
               <CheckCircle2 className="h-3 w-3 text-accent" />
-              <span className="text-accent font-medium">全部就绪</span>
+              <span className="text-accent font-medium">{t("statusBar.allReady")}</span>
             </>
           ) : (
             <>
               <AlertCircle className="h-3 w-3 text-yellow-500" />
               <span className="text-yellow-500 font-medium">
-                {readyCount}/{toolCount} 就绪
+                {t("statusBar.readyCount", { ready: readyCount, total: toolCount })}
               </span>
             </>
           )}

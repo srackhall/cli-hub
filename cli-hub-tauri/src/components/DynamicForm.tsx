@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import { HelpTooltip } from "@/components/HelpTooltip"
 import { FilePathInput } from "@/components/FilePathInput"
 import { Plus, Trash2 } from "lucide-react"
+import { useTranslation } from "react-i18next"
 import type { ToolSchema, SchemaProp } from "@/types"
 
 interface DynamicFormProps {
@@ -21,6 +22,9 @@ interface DynamicFormProps {
 }
 
 export function DynamicForm({ schema, values, onChange }: DynamicFormProps) {
+  const { i18n } = useTranslation()
+  const isZh = i18n.language.startsWith("zh")
+
   const fields = Object.entries(schema.properties ?? {})
 
   return (
@@ -32,6 +36,7 @@ export function DynamicForm({ schema, values, onChange }: DynamicFormProps) {
           prop={prop}
           value={values[key]}
           onChange={(v) => onChange(key, v)}
+          isZh={isZh}
         />
       ))}
     </div>
@@ -43,13 +48,16 @@ function FormField({
   prop,
   value,
   onChange,
+  isZh,
 }: {
   name: string
   prop: SchemaProp
   value: unknown
   onChange: (v: unknown) => void
+  isZh: boolean
 }) {
-  const label = prop.description_zh || prop.description || name
+  const { t } = useTranslation()
+  const label = isZh ? (prop.description_zh || prop.description || name) : (prop.description || name)
 
   if (prop.type === "boolean") {
     return (
@@ -80,7 +88,7 @@ function FormField({
           onValueChange={(v) => onChange(v === "__empty__" ? "" : v)}
         >
           <SelectTrigger id={name} className="h-8 text-xs">
-            <SelectValue placeholder={`选择 ${label}...`} />
+            <SelectValue placeholder={t("dynamicForm.selectPlaceholder", { label })} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="__empty__">(无)</SelectItem>
@@ -157,7 +165,7 @@ function FormField({
             className="h-7 text-xs"
             onClick={() => onChange([...items, ""])}
           >
-            <Plus className="h-3.5 w-3.5 mr-1" /> 添加
+            <Plus className="h-3.5 w-3.5 mr-1" /> {t("dynamicForm.addItem")}
           </Button>
         </div>
       </div>

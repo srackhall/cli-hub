@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "tools": "Tools",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "search": "Search tools...",
+    "import": "Import",
+    "importing": "...",
+    "delete": "Delete Tool",
+    "noTools": "No tools imported yet. Use the + button to import a CLI tool binary.",
+    "noMatch": "No matches",
+    "error": "Error",
+    "browseDir": "Browse directory...",
+    "browseFile": "Browse file..."
+  },
+  "main": {
+    "selectTool": "Select a tool from the sidebar to get started.",
+    "loading": "Loading...",
+    "previousStep": "Previous",
+    "nextStep": "Next",
+    "reset": "Reset",
+    "execute": "Execute",
+    "running": "Running...",
+    "startLog": "Starting {{name}}...",
+    "successLog": "Success ({{output}})",
+    "errorLog": "Error [code {{code}}]: {{output}}",
+    "execErrorLog": "Execution failed: {{error}}",
+    "defaultStepTitle": "Parameters"
+  },
+  "dynamicForm": {
+    "selectPlaceholder": "Select {{label}}...",
+    "addItem": "Add"
+  },
+  "console": {
+    "ready": "Ready. Select a tool and click Execute to start."
+  },
+  "statusBar": {
+    "toolCount": "{{count}} tools",
+    "allReady": "All ready",
+    "readyCount": "{{ready}}/{{total}} ready"
+  },
+  "settings": {
+    "title": "Settings",
+    "cliPath": "CLI Tools Storage Path",
+    "cliPathDesc": "Directory for storing and managing CLI tools. A cli/ subdirectory will be created automatically.",
+    "cliDirNote": "The cli/ directory will be created at the specified path for storing imported tools.",
+    "dataNote": "Settings and persistent data are stored in cli/../db/settings.json",
+    "refreshTooltip": "Refresh tool list",
+    "save": "Save",
+    "saved": "Saved",
+    "language": "Interface Language",
+    "languageDesc": "Auto-matched to system language on first launch. You can override here."
+  },
+  "theme": {
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
+  "dialog": {
+    "importTitle": "Import CLI Tool",
+    "selectDir": "Select Directory",
+    "selectFile": "Select File",
+    "deleteConfirm": "Remove {{name}} from CLI Hub? This only removes the copy in the tools directory."
+  }
+}

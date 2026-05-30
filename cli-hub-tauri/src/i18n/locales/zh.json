@@ -1,0 +1,65 @@
+{
+  "nav": {
+    "tools": "工具",
+    "settings": "设置"
+  },
+  "sidebar": {
+    "search": "搜索工具...",
+    "import": "导入",
+    "importing": "...",
+    "delete": "删除工具",
+    "noTools": "还没有导入工具。使用 + 按钮导入 CLI 工具二进制文件。",
+    "noMatch": "无匹配结果",
+    "error": "错误",
+    "browseDir": "浏览目录...",
+    "browseFile": "浏览文件..."
+  },
+  "main": {
+    "selectTool": "从侧边栏选择一个工具开始使用。",
+    "loading": "加载中...",
+    "previousStep": "上一步",
+    "nextStep": "下一步",
+    "reset": "重置",
+    "execute": "执行",
+    "running": "运行中...",
+    "startLog": "启动 {{name}}...",
+    "successLog": "成功 ({{output}})",
+    "errorLog": "错误 [code {{code}}]: {{output}}",
+    "execErrorLog": "执行失败: {{error}}",
+    "defaultStepTitle": "参数"
+  },
+  "dynamicForm": {
+    "selectPlaceholder": "选择 {{label}}...",
+    "addItem": "添加"
+  },
+  "console": {
+    "ready": "就绪。选择一个工具并点击执行开始。"
+  },
+  "statusBar": {
+    "toolCount": "{{count}} 个工具",
+    "allReady": "全部就绪",
+    "readyCount": "{{ready}}/{{total}} 就绪"
+  },
+  "settings": {
+    "title": "设置",
+    "cliPath": "CLI 工具存储路径",
+    "cliPathDesc": "指定用于存储和管理 CLI 工具的目录。cli/ 子目录将自动创建。",
+    "cliDirNote": "cli/ 目录将在指定路径创建，用于存储导入的工具。",
+    "dataNote": "设置和持久化数据存储在 cli/../db/settings.json",
+    "refreshTooltip": "刷新工具列表",
+    "save": "保存",
+    "saved": "已保存",
+    "language": "界面语言",
+    "languageDesc": "首次启动时自动匹配系统语言，可在此手动切换。"
+  },
+  "theme": {
+    "switchToLight": "切换到亮色模式",
+    "switchToDark": "切换到暗色模式"
+  },
+  "dialog": {
+    "importTitle": "导入 CLI 工具",
+    "selectDir": "选择目录",
+    "selectFile": "选择文件",
+    "deleteConfirm": "从 CLI Hub 移除 {{name}}？此操作仅删除工具目录中的副本。"
+  }
+}

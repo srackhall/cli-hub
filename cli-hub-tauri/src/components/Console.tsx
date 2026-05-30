@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react"
+import { useTranslation } from "react-i18next"
 import type { LogEntry } from "@/types"
 
 interface ConsoleProps {
@@ -7,6 +8,7 @@ interface ConsoleProps {
 }
 
 export function Console({ logs, height }: ConsoleProps) {
+  const { t } = useTranslation()
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export function Console({ logs, height }: ConsoleProps) {
       style={{ height, background: "var(--console-bg)", color: "var(--console-text)" }}
     >
       {logs.length === 0 && (
-        <p className="opacity-30">就绪。选择一个工具并点击执行开始。</p>
+        <p className="opacity-30">{t("console.ready")}</p>
       )}
       {logs.map((entry, i) => (
         <div

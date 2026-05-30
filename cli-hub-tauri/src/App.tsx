@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Wrench, SettingsIcon, Sun, Moon } from "lucide-react"
 import { useResizable } from "@/hooks/useResizable"
 import { useTheme } from "@/hooks/useTheme"
+import { useTranslation } from "react-i18next"
 import { api, type ToolInfo, type LogEntry } from "@/api"
 import { listen } from "@tauri-apps/api/event"
 
@@ -18,6 +19,8 @@ const MAX_SIDEBAR = 420
 const MIN_CONSOLE = 80
 
 export default function App() {
+  const { t, i18n } = useTranslation()
+  const isZh = i18n.language.startsWith("zh")
   const { theme, toggleTheme } = useTheme()
   const [page, setPage] = useState<Page>("tools")
   const [tools, setTools] = useState<ToolInfo[]>([])
@@ -79,7 +82,7 @@ export default function App() {
             className="h-7 text-[11px] px-2.5 rounded-md font-medium tracking-tight"
           >
             <Wrench className="h-3.5 w-3.5 mr-1.5" />
-            工具
+            {t("nav.tools")}
           </Button>
           <Button
             variant={page === "settings" ? "secondary" : "ghost"}
@@ -88,16 +91,25 @@ export default function App() {
             className="h-7 text-[11px] px-2.5 rounded-md font-medium"
           >
             <SettingsIcon className="h-3.5 w-3.5 mr-1.5" />
-            设置
+            {t("nav.settings")}
           </Button>
         </div>
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
             size="icon"
+            className="h-7 w-7 text-[11px] font-medium"
+            onClick={() => i18n.changeLanguage(isZh ? "en" : "zh")}
+            title={isZh ? "Switch to English" : "切换到中文"}
+          >
+            {isZh ? "EN" : "中"}
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
             className="h-7 w-7"
             onClick={toggleTheme}
-            title={theme === "dark" ? "切换到亮色模式" : "切换到暗色模式"}
+            title={theme === "dark" ? t("theme.switchToLight") : t("theme.switchToDark")}
           >
             {theme === "dark" ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
           </Button>
