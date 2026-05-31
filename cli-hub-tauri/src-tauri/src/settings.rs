@@ -1,77 +1,67 @@
-use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::sync::RwLock;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AppSettings {
-    #[serde(default)]
-    pub cli_path: String,
+/// Platform-agnostic "open in file manager" helper.
+#[cfg(target_os = "macos")]
+fn open_in_file_manager(path: &std::path::Path) {
+    std::process::Command::new("open")
+        .arg(path)
+        .spawn()
+        .ok();
 }
 
-impl Default for AppSettings {
-    fn default() -> Self {
-        Self {
-            cli_path: String::new(),
-        }
-    }
+#[cfg(target_os = "windows")]
+fn open_in_file_manager(path: &std::path::Path) {
+    std::process::Command::new("explorer")
+        .arg(path)
+        .spawn()
+        .ok();
+}
+
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+fn open_in_file_manager(path: &std::path::Path) {
+    std::process::Command::new("xdg-open")
+        .arg(path)
+        .spawn()
+        .ok();
 }
 
 pub struct SettingsStore {
     app_dir: PathBuf,
-    settings: RwLock<AppSettings>,
 }
 
 impl SettingsStore {
     pub fn new(app_dir: &Path) -> Self {
+        // Ensure db/ exists for settings.json (future use: language pref, etc.)
         let db_dir = app_dir.join("db");
         std::fs::create_dir_all(&db_dir).ok();
+        // Create settings.json with empty object if it doesn't exist
         let file_path = db_dir.join("settings.json");
+        if !file_path.exists() {
+            std::fs::write(&file_path, "{}").ok();
+        }
 
-        let settings = match std::fs::read_to_string(&file_path) {
-            Ok(data) => serde_json::from_str(&data).unwrap_or_default(),
-            Err(_) => AppSettings::default(),
-        };
-
-        let store = Self {
+        Self {
             app_dir: app_dir.to_path_buf(),
-            settings: RwLock::new(settings),
-        };
-        store.save();
-        store
-    }
-
-    pub fn get(&self) -> AppSettings {
-        self.settings.read().unwrap().clone()
-    }
-
-    pub fn update(&self, new_settings: AppSettings) {
-        *self.settings.write().unwrap() = new_settings;
-        self.save();
+        }
     }
 
     pub fn get_tools_dir(&self) -> PathBuf {
-        let settings = self.settings.read().unwrap();
-        if settings.cli_path.is_empty() {
-            self.app_dir.join("cli")
-        } else {
-            let p = Path::new(&settings.cli_path);
-            if p.is_absolute() {
-                p.to_path_buf()
-            } else {
-                self.app_dir.join(p)
-            }
-        }
+        self.app_dir.join("cli")
     }
 
-    pub fn app_dir(&self) -> &Path {
-        &self.app_dir
+    pub fn get_data_dir(&self) -> PathBuf {
+        self.app_dir.join("db")
     }
 
-    fn save(&self) {
-        let settings = self.settings.read().unwrap();
-        let file_path = self.app_dir.join("db").join("settings.json");
-        if let Ok(data) = serde_json::to_string_pretty(&*settings) {
-            std::fs::write(&file_path, data).ok();
-        }
+    pub fn open_tools_dir(&self) {
+        let dir = self.get_tools_dir();
+        std::fs::create_dir_all(&dir).ok();
+        open_in_file_manager(&dir);
+    }
+
+    pub fn open_data_dir(&self) {
+        let dir = self.get_data_dir();
+        std::fs::create_dir_all(&dir).ok();
+        open_in_file_manager(&dir);
     }
 }

@@ -47,9 +47,10 @@ pub fn run() {
             commands::tools::import_tool,
             commands::tools::delete_tool,
             commands::tools::refresh_tools,
-            commands::settings::get_settings,
-            commands::settings::update_settings,
             commands::settings::get_tools_dir,
+            commands::settings::get_data_dir,
+            commands::settings::open_tools_dir,
+            commands::settings::open_data_dir,
             executor::execute_tool,
             log::log_frontend,
         ])

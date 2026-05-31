@@ -42,10 +42,6 @@ export interface StepGroup {
   fields: string[];
 }
 
-export interface AppSettings {
-  cli_path: string;
-}
-
 export interface ExecuteResult {
   status: string;
   output: string;
@@ -75,10 +71,11 @@ export const api = {
 
   refreshTools: () => invoke<void>("refresh_tools"),
 
-  getSettings: () => invoke<AppSettings>("get_settings"),
-
-  updateSettings: (settings: AppSettings) =>
-    invoke<void>("update_settings", { settings }),
-
   getToolsDir: () => invoke<string>("get_tools_dir"),
+
+  getDataDir: () => invoke<string>("get_data_dir"),
+
+  openToolsDir: () => invoke<void>("open_tools_dir"),
+
+  openDataDir: () => invoke<void>("open_data_dir"),
 };
