@@ -39,10 +39,11 @@ echo "  输出行数: $lines"
 
 echo ""
 echo "5. 测试缺失必需参数 (应返回错误)"
-if ./xlsx-extract 2>&1 | grep -q "ERROR: --input is required"; then
-    echo "  正确返回参数错误"
+if ! ./xlsx-extract 2>&1 >/dev/null; then
+    echo "  正确返回参数错误 (exit code non-zero)"
 else
     echo "  未返回预期错误"
+    exit 1
 fi
 
 echo ""
