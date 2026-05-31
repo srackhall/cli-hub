@@ -53,14 +53,14 @@ func getSchema() map[string]any {
 			},
 			"key-col": map[string]any{
 				"type":          "string",
-				"description":   "Grouping column letter (e.g. A)",
-				"descriptionZh": "号段列字母（如 A）",
+				"description":   "Grouping column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
+				"descriptionZh": "号段列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
 				"default":       "A",
 			},
 			"val-col": map[string]any{
 				"type":          "string",
-				"description":   "Value column letter (e.g. B)",
-				"descriptionZh": "号码列字母（如 B）",
+				"description":   "Value column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
+				"descriptionZh": "号码列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
 				"default":       "B",
 			},
 			"limit": map[string]any{
@@ -128,14 +128,8 @@ func run() {
 
 	groupMap := make(map[string][]string)
 
-	keyCol := args["key-col"]
-	if keyCol == "" {
-		keyCol = "A"
-	}
-	valCol := args["val-col"]
-	if valCol == "" {
-		valCol = "B"
-	}
+	keyCol := normalizeCol(args["key-col"], "A")
+	valCol := normalizeCol(args["val-col"], "B")
 
 	for i := 1; i < len(rows); i++ {
 		keyCell, err1 := f.GetCellValue(sheet, fmt.Sprintf("%s%d", keyCol, i+1))
@@ -210,6 +204,32 @@ func run() {
 
 	fmt.Printf("Done: %d values from %d segments written to %s\n", totalExtracted, len(segments), outputFile)
 	fmt.Printf(`{"status":"ok","output":"%d values from %d segments"}`+"\n", totalExtracted, len(segments))
+}
+
+// normalizeCol accepts a column spec that may be a letter (A-Z, AA-ZZ, case-insensitive)
+// or a 1-based number ("1" = column A, "2" = B, etc.). Returns the uppercase letter form.
+func normalizeCol(raw string, defaultCol string) string {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return defaultCol
+	}
+	// Try as number first
+	if n, err := strconv.Atoi(raw); err == nil && n >= 1 {
+		return colNumToLetter(n)
+	}
+	// Treat as letter — uppercase it
+	return strings.ToUpper(raw)
+}
+
+// colNumToLetter converts 1→A, 2→B, …, 26→Z, 27→AA, etc.
+func colNumToLetter(n int) string {
+	var s string
+	for n > 0 {
+		n--
+		s = string(rune('A'+n%26)) + s
+		n /= 26
+	}
+	return s
 }
 
 // parseArgs converts ["--key", "val", "--flag"] into map["key"]="val", map["flag"]="true".
