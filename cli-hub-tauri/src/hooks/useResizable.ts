@@ -23,7 +23,9 @@ export function useResizable({ defaultSize, minSize, maxSize, axis }: UseResizab
 
       const onMouseMove = (e: MouseEvent) => {
         const currentPos = axis === "x" ? e.clientX : e.clientY
-        const delta = currentPos - startRef.current.startPos
+        // y-axis: invert delta so dragging UP (toward content) expands the panel
+        const rawDelta = currentPos - startRef.current.startPos
+        const delta = axis === "x" ? rawDelta : -rawDelta
         const newSize = Math.min(maxSize, Math.max(minSize, startRef.current.startSize + delta))
         setSize(newSize)
       }

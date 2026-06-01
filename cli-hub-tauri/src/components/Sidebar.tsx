@@ -17,7 +17,8 @@ interface SidebarProps {
 }
 
 export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshTools }: SidebarProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const isZh = i18n.language.startsWith("zh")
   const [search, setSearch] = useState("")
   const [importing, setImporting] = useState(false)
 
@@ -52,6 +53,10 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
     } catch (err) {
       console.error("删除失败:", err)
     }
+  }
+
+  const getToolDesc = (tool: ToolInfo) => {
+    return isZh ? (tool.description_zh || tool.description) : tool.description
   }
 
   const compact = width < 180
@@ -92,7 +97,7 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
       <ScrollArea className="flex-1">
         <div className="p-2 space-y-0.5">
           {filtered.map((tool) => {
-            const desc = tool.description_zh || tool.description
+            const desc = getToolDesc(tool)
             const isSelected = selectedTool === tool.name
             return (
             <div

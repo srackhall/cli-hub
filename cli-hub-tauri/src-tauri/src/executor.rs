@@ -7,6 +7,23 @@ use tokio::time::{timeout, Duration};
 
 use crate::settings::SettingsStore;
 
+fn status_message(lang: &str, kind: &str) -> String {
+    match (lang, kind) {
+        ("zh", "ok") => "执行完成".into(),
+        ("zh", "param_err") => "参数错误".into(),
+        ("zh", "runtime_err") => "运行时错误".into(),
+        ("zh", "timeout") => "执行超时 (超过 5 分钟)".into(),
+        ("zh", "invalid_name") => "无效的工具名称".into(),
+        ("zh", _not_found) => "工具未找到".into(),
+        (_, "ok") => "Execution completed".into(),
+        (_, "param_err") => "Parameter error".into(),
+        (_, "runtime_err") => "Runtime error".into(),
+        (_, "timeout") => "Execution timed out (over 5 minutes)".into(),
+        (_, "invalid_name") => "Invalid tool name".into(),
+        (_, _not_found) => "Tool not found".into(),
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ExecuteResult {
     pub status: String,
@@ -81,12 +98,14 @@ pub async fn execute_tool(
     app_handle: AppHandle,
     store: State<'_, SettingsStore>,
     name: String,
+    lang: String,
     params: HashMap<String, serde_json::Value>,
 ) -> Result<ExecuteResult, String> {
+    let lang = if lang.starts_with("zh") { "zh" } else { "en" };
     if !validate_tool_name(&name) {
         return Ok(ExecuteResult {
             status: "error".into(),
-            output: "invalid tool name".into(),
+            output: status_message(lang, "invalid_name"),
             code: -1,
         });
     }
@@ -94,12 +113,13 @@ pub async fn execute_tool(
     if !tool_path.exists() {
         return Ok(ExecuteResult {
             status: "error".into(),
-            output: format!("tool not found: {}", name),
+            output: status_message(lang, "not_found"),
             code: -1,
         });
     }
 
-    let args = build_args(&params);
+    let mut args = vec![format!("--lang={}", lang)];
+    args.extend(build_args(&params));
 
     let mut cmd = Command::new(&tool_path);
     cmd.args(&args);
@@ -164,19 +184,19 @@ pub async fn execute_tool(
             if code == 0 {
                 ExecuteResult {
                     status: "ok".into(),
-                    output: "执行完成".into(),
+                    output: status_message(lang, "ok"),
                     code: 0,
                 }
             } else if code == 1 {
                 ExecuteResult {
                     status: "error".into(),
-                    output: "参数错误".into(),
+                    output: status_message(lang, "param_err"),
                     code,
                 }
             } else {
                 ExecuteResult {
                     status: "error".into(),
-                    output: "运行时错误".into(),
+                    output: status_message(lang, "runtime_err"),
                     code,
                 }
             }
@@ -190,7 +210,7 @@ pub async fn execute_tool(
             let _ = child.kill().await;
             ExecuteResult {
                 status: "error".into(),
-                output: "执行超时 (超过 5 分钟)".into(),
+                output: status_message(lang, "timeout"),
                 code: -1,
             }
         }

@@ -66,8 +66,8 @@ export const api = {
   deleteTool: (name: string) =>
     invoke<void>("delete_tool", { name }),
 
-  executeTool: (name: string, params: Record<string, unknown>) =>
-    invoke<ExecuteResult>("execute_tool", { name, params }),
+  executeTool: (name: string, params: Record<string, unknown>, lang: string) =>
+    invoke<ExecuteResult>("execute_tool", { name, params, lang }),
 
   refreshTools: () => invoke<void>("refresh_tools"),
 

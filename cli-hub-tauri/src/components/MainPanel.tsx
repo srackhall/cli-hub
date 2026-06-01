@@ -13,7 +13,7 @@ interface MainPanelProps {
 }
 
 export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const [schema, setSchema] = useState<ToolSchema | null>(null)
   const [values, setValues] = useState<Record<string, unknown>>({})
   const [currentStep, setCurrentStep] = useState(0)
@@ -60,7 +60,7 @@ export function MainPanel({ selectedTool, onLog }: MainPanelProps) {
     setRunning(true)
     onLog({ stream: "stdout", text: t("main.startLog", { name: selectedTool }), ts: Date.now() })
     try {
-      const result = await api.executeTool(selectedTool!, values)
+      const result = await api.executeTool(selectedTool!, values, i18n.language)
       if (result && result.code === 0) {
         onLog({ stream: "stdout", text: t("main.successLog", { output: result.output }), ts: Date.now() })
       } else if (result) {

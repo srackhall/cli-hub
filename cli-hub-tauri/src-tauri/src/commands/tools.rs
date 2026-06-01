@@ -18,11 +18,11 @@ pub struct ToolInfo {
     pub version: String,
     #[serde(default)]
     pub description: String,
-    #[serde(default)]
+    #[serde(default, alias = "descriptionZh")]
     pub description_zh: String,
     #[serde(default)]
     pub long_description: String,
-    #[serde(default)]
+    #[serde(default, alias = "longDescriptionZh")]
     pub long_description_zh: String,
     pub ready: bool,
     #[serde(default)]
@@ -35,7 +35,7 @@ pub struct SchemaProp {
     pub prop_type: String,
     #[serde(default)]
     pub description: String,
-    #[serde(default)]
+    #[serde(default, alias = "descriptionZh")]
     pub description_zh: String,
     #[serde(default)]
     pub default: serde_json::Value,
@@ -60,7 +60,7 @@ pub struct ArrayItems {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct StepGroup {
     pub title: String,
-    #[serde(default)]
+    #[serde(default, alias = "titleZh")]
     pub title_zh: String,
     pub fields: Vec<String>,
 }
@@ -69,15 +69,15 @@ pub struct StepGroup {
 pub struct ToolSchema {
     #[serde(default)]
     pub title: String,
-    #[serde(default)]
+    #[serde(default, alias = "titleZh")]
     pub title_zh: String,
     #[serde(default)]
     pub description: String,
-    #[serde(default)]
+    #[serde(default, alias = "descriptionZh")]
     pub description_zh: String,
     #[serde(default)]
     pub long_description: String,
-    #[serde(default)]
+    #[serde(default, alias = "longDescriptionZh")]
     pub long_description_zh: String,
     #[serde(rename = "type")]
     pub schema_type: String,

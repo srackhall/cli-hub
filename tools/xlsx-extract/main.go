@@ -12,13 +12,65 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
+var lang = "zh"
+
+var msgs = map[string]map[string]string{
+	"usage":             {"zh": "用法: xlsx-extract --schema|--version|--lang=zh|en|<params>", "en": "Usage: xlsx-extract --schema|--version|--lang=zh|en|<params>"},
+	"input_required":    {"zh": "错误: --input 是必需的", "en": "ERROR: --input is required"},
+	"file_not_found":    {"zh": "错误: 输入文件未找到: %s", "en": "ERROR: input file not found: %s"},
+	"open_failed":       {"zh": "错误: 无法打开文件: %v", "en": "ERROR: failed to open file: %v"},
+	"read_failed":       {"zh": "错误: 无法读取工作表: %v", "en": "ERROR: failed to read sheet: %v"},
+	"no_data":           {"zh": "错误: 工作表没有数据行", "en": "ERROR: sheet has no data rows"},
+	"no_data_columns":   {"zh": "错误: 指定列中没有找到数据", "en": "ERROR: no data found in specified columns"},
+	"write_failed":      {"zh": "错误: 无法写入输出文件: %v", "en": "ERROR: failed to write output: %v"},
+	"segment_progress":  {"zh": "号段 %s: 已提取 %d/%d", "en": "Segment %s: extracted %d/%d"},
+	"done":              {"zh": "完成: %d 个值从 %d 个号段写入 %s", "en": "Done: %d values from %d segments written to %s"},
+	"result_summary":    {"zh": "%d 个值来自 %d 个号段", "en": "%d values from %d segments"},
+}
+
+func msg(key string, args ...any) string {
+	if m, ok := msgs[key]; ok {
+		if s, ok := m[lang]; ok {
+			if len(args) > 0 {
+				return fmt.Sprintf(s, args...)
+			}
+			return s
+		}
+	}
+	if len(args) > 0 {
+		return fmt.Sprintf(key, args...)
+	}
+	return key
+}
+
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Fprintln(os.Stderr, "Usage: xlsx-extract --schema|--version|<params>")
+		fmt.Fprintln(os.Stderr, msg("usage"))
 		os.Exit(1)
 	}
 
-	switch os.Args[1] {
+	// Parse --lang before anything else
+	for _, a := range os.Args[1:] {
+		if strings.HasPrefix(a, "--lang=") {
+			v := strings.TrimPrefix(a, "--lang=")
+			if v == "en" {
+				lang = "en"
+			}
+			break
+		}
+	}
+
+	firstArg := os.Args[1]
+	// If first arg is --lang=..., skip to the next meaningful arg
+	if strings.HasPrefix(firstArg, "--lang=") {
+		if len(os.Args) < 3 {
+			fmt.Fprintln(os.Stderr, msg("usage"))
+			os.Exit(1)
+		}
+		firstArg = os.Args[2]
+	}
+
+	switch firstArg {
 	case "--schema":
 		b, _ := json.MarshalIndent(getSchema(), "", "  ")
 		fmt.Println(string(b))
@@ -31,64 +83,64 @@ func main() {
 
 func getSchema() map[string]any {
 	return map[string]any{
-		"title":            "XLSX Extract",
-		"titleZh":          "XLSX 号码提取",
-		"description":      "Extract values from one Excel column grouped by another column, with configurable limit per group.",
-		"descriptionZh":    "按指定列分组提取另一列的值，可配置每组提取数量，支持随机或顺序选取。",
-		"longDescription":  "Reads an Excel (.xlsx) file and groups rows by a key column (e.g. column A for segments). For each group, extracts up to N values from a value column (e.g. column B for phone numbers). Results are written to a text file, one value per line. Supports optional random shuffling within each group for unbiased sampling.",
-		"longDescriptionZh": "读取 Excel (.xlsx) 文件，按号段列（如 A 列）分组，从号码列（如 B 列）中为每个号段提取最多 N 个号码。结果按每行一个写入文本文件。支持可选随机抽取，避免顺序偏差。适用于号段号码分配、抽样提取等场景。",
-		"type":             "object",
+		"title":              "XLSX Extract",
+		"title_zh":           "XLSX 号码提取",
+		"description":        "Extract values from one Excel column grouped by another column, with configurable limit per group.",
+		"description_zh":     "按指定列分组提取另一列的值，可配置每组提取数量，支持随机或顺序选取。",
+		"long_description":   "Reads an Excel (.xlsx) file and groups rows by a key column (e.g. column A for segments). For each group, extracts up to N values from a value column (e.g. column B for phone numbers). Results are written to a text file, one value per line. Supports optional random shuffling within each group for unbiased sampling.",
+		"long_description_zh": "读取 Excel (.xlsx) 文件，按号段列（如 A 列）分组，从号码列（如 B 列）中为每个号段提取最多 N 个号码。结果按每行一个写入文本文件。支持可选随机抽取，避免顺序偏差。适用于号段号码分配、抽样提取等场景。",
+		"type":               "object",
 		"properties": map[string]any{
 			"input": map[string]any{
-				"type":          "string",
-				"description":   "Input Excel file path (.xlsx)",
-				"descriptionZh": "输入 Excel 文件路径 (.xlsx)",
-				"format":        "file-path",
+				"type":           "string",
+				"description":    "Input Excel file path (.xlsx)",
+				"description_zh": "输入 Excel 文件路径 (.xlsx)",
+				"format":         "file-path",
 			},
 			"output": map[string]any{
-				"type":          "string",
-				"description":   "Output text file path",
-				"descriptionZh": "输出文本文件路径",
-				"default":       "output.txt",
+				"type":           "string",
+				"description":    "Output text file path",
+				"description_zh": "输出文本文件路径",
+				"default":        "output.txt",
 			},
 			"key-col": map[string]any{
-				"type":          "string",
-				"description":   "Grouping column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
-				"descriptionZh": "号段列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
-				"default":       "A",
+				"type":           "string",
+				"description":    "Grouping column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
+				"description_zh": "号段列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
+				"default":        "A",
 			},
 			"val-col": map[string]any{
-				"type":          "string",
-				"description":   "Value column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
-				"descriptionZh": "号码列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
-				"default":       "B",
+				"type":           "string",
+				"description":    "Value column — letter (A/B/C) or number (1/2/3). Col A = 1st column, B = 2nd, etc.",
+				"description_zh": "号码列 — 字母（A/B/C）或数字（1/2/3）。A列=第1列，B列=第2列，以此类推",
+				"default":        "B",
 			},
 			"limit": map[string]any{
-				"type":          "integer",
-				"description":   "Max values to extract per group",
-				"descriptionZh": "每组最多提取数量",
-				"default":       200,
-				"minimum":       1,
-				"maximum":       100000,
+				"type":           "integer",
+				"description":    "Max values to extract per group",
+				"description_zh": "每组最多提取数量",
+				"default":        200,
+				"minimum":        1,
+				"maximum":        100000,
 			},
 			"shuffle": map[string]any{
-				"type":          "boolean",
-				"description":   "Randomize selection within each group",
-				"descriptionZh": "每组内随机抽取",
-				"default":       false,
+				"type":           "boolean",
+				"description":    "Randomize selection within each group",
+				"description_zh": "每组内随机抽取",
+				"default":        false,
 			},
 		},
 		"required": []string{"input"},
 		"x-steps": []map[string]any{
 			{
-				"title":   "Step 1: Input & Output",
-				"titleZh": "步骤 1：输入输出",
-				"fields":  []string{"input", "output"},
+				"title":    "Step 1: Input & Output",
+				"title_zh": "步骤 1：输入输出",
+				"fields":   []string{"input", "output"},
 			},
 			{
-				"title":   "Step 2: Extraction Rules",
-				"titleZh": "步骤 2：提取规则",
-				"fields":  []string{"key-col", "val-col", "limit", "shuffle"},
+				"title":    "Step 2: Extraction Rules",
+				"title_zh": "步骤 2：提取规则",
+				"fields":   []string{"key-col", "val-col", "limit", "shuffle"},
 			},
 		},
 	}
@@ -98,18 +150,18 @@ func run() {
 	args := parseArgs(os.Args[1:])
 
 	if args["input"] == "" {
-		fmt.Fprintln(os.Stderr, "ERROR: --input is required")
+		fmt.Fprintln(os.Stderr, msg("input_required"))
 		os.Exit(1)
 	}
 
 	if _, err := os.Stat(args["input"]); os.IsNotExist(err) {
-		fmt.Fprintf(os.Stderr, "ERROR: input file not found: %s\n", args["input"])
+		fmt.Fprintf(os.Stderr, msg("file_not_found", args["input"])+"\n")
 		os.Exit(2)
 	}
 
 	f, err := excelize.OpenFile(args["input"])
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to open file: %v\n", err)
+		fmt.Fprintf(os.Stderr, msg("open_failed", err)+"\n")
 		os.Exit(2)
 	}
 	defer f.Close()
@@ -117,12 +169,12 @@ func run() {
 	sheet := f.GetSheetName(0)
 	rows, err := f.GetRows(sheet)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to read sheet: %v\n", err)
+		fmt.Fprintf(os.Stderr, msg("read_failed", err)+"\n")
 		os.Exit(2)
 	}
 
 	if len(rows) < 2 {
-		fmt.Fprintln(os.Stderr, "ERROR: sheet has no data rows")
+		fmt.Fprintln(os.Stderr, msg("no_data"))
 		os.Exit(2)
 	}
 
@@ -146,7 +198,7 @@ func run() {
 	}
 
 	if len(groupMap) == 0 {
-		fmt.Fprintln(os.Stderr, "ERROR: no data found in specified columns")
+		fmt.Fprintln(os.Stderr, msg("no_data_columns"))
 		os.Exit(2)
 	}
 
@@ -178,7 +230,7 @@ func run() {
 			n = len(numbers)
 		}
 
-		fmt.Printf("Segment %s: extracted %d/%d\n", segment, n, len(numbers))
+		fmt.Println(msg("segment_progress", segment, n, len(numbers)))
 
 		for i := 0; i < n; i++ {
 			result = append(result, numbers[i])
@@ -198,12 +250,12 @@ func run() {
 	}
 
 	if err := os.WriteFile(outputFile, []byte(sb.String()), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "ERROR: failed to write output: %v\n", err)
+		fmt.Fprintf(os.Stderr, msg("write_failed", err)+"\n")
 		os.Exit(2)
 	}
 
-	fmt.Printf("Done: %d values from %d segments written to %s\n", totalExtracted, len(segments), outputFile)
-	fmt.Printf(`{"status":"ok","output":"%d values from %d segments"}`+"\n", totalExtracted, len(segments))
+	fmt.Println(msg("done", totalExtracted, len(segments), outputFile))
+	fmt.Printf(`{"status":"ok","output":"%s"}`+"\n", msg("result_summary", totalExtracted, len(segments)))
 }
 
 // normalizeCol accepts a column spec that may be a letter (A-Z, AA-ZZ, case-insensitive)
@@ -233,10 +285,18 @@ func colNumToLetter(n int) string {
 }
 
 // parseArgs converts ["--key", "val", "--flag"] into map["key"]="val", map["flag"]="true".
+// Skips --lang and --lang=... arguments.
 func parseArgs(raw []string) map[string]string {
 	m := map[string]string{}
 	for i := 0; i < len(raw); i++ {
 		a := raw[i]
+		// Skip --lang=... and --lang <value>
+		if strings.HasPrefix(a, "--lang=") || a == "--lang" {
+			if a == "--lang" && i+1 < len(raw) {
+				i++ // skip value
+			}
+			continue
+		}
 		if !strings.HasPrefix(a, "--") {
 			continue
 		}
