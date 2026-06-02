@@ -1,11 +1,19 @@
-# Design Spec: CLI Tool Makefile + generate-cli Skill Upgrade
+# Design Spec: CLI Makefile + generate-cli Skill Upgrade + Skill File Consolidation
 
 **Date:** 2026-06-02
 **Status:** Proposed
 
 ## 1. Motivation
 
-The `tools/` directory houses CLI tools (currently only `xlsx-extract`) that need to be distributed as cross-platform binaries for the CLI Hub Tauri desktop app. Go has first-class cross-compilation support via `GOOS`/`GOARCH` environment variables, but there is no build automation — no Makefile exists anywhere in the project. Additionally, the `generate-cli` skill that scaffolds new CLI tools needs to auto-generate a Makefile alongside the Go source.
+Two intertwined issues need resolution:
+
+1. **No build automation** — `tools/xlsx-extract/` (the only CLI tool) has no Makefile for Go cross-compilation, despite Go's first-class GOOS/GOARCH support.
+
+2. **Duplicate skill files** — The `generate-cli` skill exists in two places:
+   - `项目根/.claude/skills/generate-cli.md` (358 lines, old flat-file version) — this is the one Claude Code **actually discovers** when working from the repo root.
+   - `cli-hub-tauri/.claude/skills/generate-cli/SKILL.md` (517 lines, canonical two-section design) — this is the **authoritative version** but is invisible to agents because it's outside the workspace root's `.claude/skills/`.
+
+   The old spec (2026-05-30) planned to delete the old version but this was never completed. We need to consolidate to a single source of truth and add Makefile generation capability.
 
 ## 2. Scope
 
@@ -13,10 +21,12 @@ The `tools/` directory houses CLI tools (currently only `xlsx-extract`) that nee
 - Create `tools/xlsx-extract/Makefile` with 3 targets: `build`, `build-all`, `clean`
 - 6 cross-compile targets: darwin/amd64, darwin/arm64, linux/amd64, linux/arm64, windows/amd64, windows/arm64
 - Output structure: `bin/<os>-<arch>/<tool>[.exe]` for cross-compile; current directory for `build`
-- Upgrade `.claude/skills/generate-cli.md` — add a "Build: Makefile" section so new tools get a Makefile automatically
+- Append a "Build: Makefile" section to the **canonical** skill at `cli-hub-tauri/.claude/skills/generate-cli/SKILL.md`
+- Delete `项目根/.claude/skills/generate-cli.md` (old flat file)
+- Create a **directory symlink**: `项目根/.claude/skills/generate-cli` → `cli-hub-tauri/.claude/skills/generate-cli`
 
 **Out of scope:**
-- CI/CD pipeline changes (GitHub Actions already handles builds)
+- CI/CD pipeline changes
 - Signing/notarization of binaries
 - Non-Go CLI tools
 
@@ -52,70 +62,70 @@ clean:
 	rm -rf bin $(BINARY)
 ```
 
-**Design decisions:**
+**Key decisions:**
 
 | Decision | Rationale |
 |----------|----------|
-| `CGO_ENABLED=0` | Produces statically-linked binaries with no glibc dependency — essential for "works anywhere" distribution |
-| `.PHONY` on every target | Prevents conflicts if a file named `build`/`clean` happens to exist |
-| `BINARY` variable at top | One-line change to reuse the Makefile for other tools |
-| `bin/<os>-<arch>/` output | Predictable, machine-parseable path; matches Go conventions |
-| Windows `.exe` suffix conditional | Standard Windows convention; `[ "$$os" = "windows" ]` is pure POSIX sh, no Makefile extensions needed |
-| No `go test`/`go run` targets | Not needed — `go test` is one command, `go run .` is one command. Keep Makefile minimal. |
+| `CGO_ENABLED=0` | Static linking — no glibc dependency, portable across Linux distros |
+| `.PHONY` on every target | Prevents conflicts if a file named `build`/`clean` exists |
+| `BINARY` variable at top | One-line rename to reuse for future tools |
+| `bin/<os>-<arch>/` output | Predictable, machine-parseable; follows Go conventions |
+| Windows `.exe` suffix conditional | Pure POSIX sh `[ ]` test, no Makefile extensions needed |
 
-### 3.2 Skill Upgrade: `.claude/skills/generate-cli.md`
+### 3.2 Skill Upgrade: "Build: Makefile" Section
 
-Append a new section at the end of the existing skill file:
+Append to `cli-hub-tauri/.claude/skills/generate-cli/SKILL.md` a new section instructing the agent to auto-generate a Makefile alongside `main.go`. The section includes:
 
-#### "Build: Makefile" Section
+1. The full Makefile template (parameterized with `<tool-name>` placeholder)
+2. Instructions: replace `<tool-name>`, write as `Makefile`, verify with `make build` and `make build-all`
+3. Key design points table explaining `CGO_ENABLED=0`, `.PHONY`, etc.
 
-This section instructs the agent (Claude Code reading the skill) to:
+### 3.3 Skill File Consolidation
 
-1. After generating `main.go`, also create a `Makefile` in the same directory
-2. Set `BINARY` to the tool name (same as what `go build -o <name>` would use)
-3. Use the canonical template (same as 3.1)
-4. Verify `make build` succeeds before reporting completion
-
-The section includes the full Makefile template (parameterized with `$(BINARY)`) so the agent can write it verbatim with only the `BINARY` variable customized.
-
-### 3.3 Directory Layout After Change
-
+**Before:**
 ```
-tools/xlsx-extract/
-  Makefile          ← NEW
-  main.go
-  go.mod
-  go.sum
-  test.sh
-  bin/              ← NEW (after make build-all)
-    darwin-amd64/
-      xlsx-extract
-    darwin-arm64/
-      xlsx-extract
-    linux-amd64/
-      xlsx-extract
-    linux-arm64/
-      xlsx-extract
-    windows-amd64/
-      xlsx-extract.exe
-    windows-arm64/
-      xlsx-extract.exe
+项目根/.claude/skills/
+  generate-cli.md              ← OLD (358 lines), wrongly updated with Makefile
+  openspec-*/                  ← other skills
 
-.claude/skills/
-  generate-cli.md   ← MODIFIED (new section appended)
+cli-hub-tauri/.claude/skills/
+  generate-cli/
+    SKILL.md                   ← CANONICAL (517 lines), invisible to agent
 ```
 
-## 4. Verification
+**After:**
+```
+项目根/.claude/skills/
+  generate-cli/                → symlink → ../../cli-hub-tauri/.claude/skills/generate-cli
+  openspec-*/                  ← other skills (unchanged)
 
-- [ ] `make build` in `tools/xlsx-extract/` produces a working binary in the current directory
-- [ ] `make build-all` produces 6 binaries in correct `bin/<os>-<arch>/` directories, Windows ones with `.exe`
-- [ ] `make clean` removes `bin/` and the local binary
-- [ ] Running `/generate-cli` with a test tool name produces both `main.go` and `Makefile`
-- [ ] The generated Makefile's `make build` succeeds for the test tool
+cli-hub-tauri/.claude/skills/
+  generate-cli/
+    SKILL.md                   ← CANONICAL (with new Makefile section), single source of truth
+```
 
-## 5. Risks
+**Why directory symlink:** Matches the canonical directory structure exactly (`skills/generate-cli/SKILL.md`). The agent discovers skills by scanning `项目根/.claude/skills/` directories — a symlink directory is transparent and followed. All maintenance happens in `cli-hub-tauri/`, the symlink ensures agents always read the latest version.
+
+## 4. Implementation Steps (Ordered)
+
+1. Revert the Makefile append on `项目根/.claude/skills/generate-cli.md` (undo bad commit)
+2. Delete `项目根/.claude/skills/generate-cli.md`
+3. Append "Build: Makefile" section to `cli-hub-tauri/.claude/skills/generate-cli/SKILL.md`
+4. Create symlink: `项目根/.claude/skills/generate-cli` → `../../cli-hub-tauri/.claude/skills/generate-cli`
+5. Verify: `make build` / `make build-all` / `make clean` work in `tools/xlsx-extract/`
+
+## 5. Verification
+
+- [ ] `make build` in `tools/xlsx-extract/` produces a working binary
+- [ ] `make build-all` produces 6 binaries in correct `bin/<os>-<arch>/` directories
+- [ ] `make clean` removes `bin/` and local binary
+- [ ] `cli-hub-tauri/.claude/skills/generate-cli/SKILL.md` contains the Makefile section
+- [ ] `项目根/.claude/skills/generate-cli/SKILL.md` resolves to the tauri version (symlink works)
+- [ ] The old `项目根/.claude/skills/generate-cli.md` flat file is deleted
+
+## 6. Risks
 
 | Risk | Mitigation |
 |------|----------|
-| `cut -d- -f1` fails on macOS if TARGETS naming convention changes | Document the `<os>-<arch>` naming contract in Makefile comments |
-| Future tools may have different `go.mod` modules | Makefile is per-tool; each tool's `Makefile` runs in its own directory with its own `go.mod` |
+| Symlink breaks on Windows | This is a macOS dev environment; symlinks are natively supported. If Windows support is needed later, switch to a copy script. |
+| Git stores symlink as text | Git on macOS stores symlinks natively. Verify with `git ls-tree` after commit. |
