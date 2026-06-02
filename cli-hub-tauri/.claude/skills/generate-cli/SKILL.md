@@ -508,11 +508,51 @@ in the sidebar, and select the compiled binary
 **Step 4:** Verify the tool appears in the sidebar. Test `--schema` and
 `--version` to confirm it works correctly
 
+### Makefile (Cross-Platform Build)
+
+The generated tool should also include a `Makefile` for cross-platform
+compilation. Include it as a second code block after `main.go`.
+
+**Makefile template:**
+
+```makefile
+BINARY  = <tool-name>
+
+TARGETS = darwin-amd64 darwin-arm64 linux-amd64 linux-arm64 windows-amd64 windows-arm64
+
+.PHONY: build
+build:
+	go build -o $(BINARY) .
+
+.PHONY: build-all
+build-all:
+	@for t in $(TARGETS); do \
+		os=$$(echo $$t | cut -d- -f1); \
+		arch=$$(echo $$t | cut -d- -f2); \
+		out="bin/$$t/$(BINARY)"; \
+		[ "$$os" = "windows" ] && out="$$out.exe"; \
+		echo "→ $$t"; \
+		GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -o "$$out" . ; \
+	done
+
+.PHONY: clean
+clean:
+	rm -rf bin $(BINARY)
+```
+
+**Manual steps for Makefile:**
+
+- **Step 5:** Save the Makefile code block as `Makefile` in the same
+directory as `main.go`
+- **Step 6:** Run `make build` to compile for your current platform
+- **Step 7:** Run `make build-all` to cross-compile for all platforms
+(binaries appear under `bin/<os>-<arch>/`)
+
 ---
 
 Now, based on the requirements above, generate the complete `main.go`
-for the user's described CLI tool. Output the code in a markdown code
-block first, then list the manual steps.
+for the user's described CLI tool, AND the `Makefile`. Output each in a
+separate markdown code block, then list the manual steps.
 
 <!-- END COPY -->
 
