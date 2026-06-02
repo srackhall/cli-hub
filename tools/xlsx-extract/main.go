@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/xuri/excelize/v2"
 )
@@ -98,10 +100,10 @@ func getSchema() map[string]any {
 				"format":         "file-path",
 			},
 			"output": map[string]any{
-				"type":           "string",
-				"description":    "Output text file path",
-				"description_zh": "输出文本文件路径",
-				"default":        "output.txt",
+				"type":        "string",
+				"description": "Output file or directory path. If a directory, a timestamped .txt file is created inside (e.g. 20260602-143025.txt).",
+				"description_zh": "输出文件或目录路径。若为目录则自动生成时间戳 .txt 文件（如 20260602-143025.txt）。",
+				"format":      "file-path",
 			},
 			"key-col": map[string]any{
 				"type":           "string",
@@ -248,6 +250,21 @@ func run() {
 	if outputFile == "" {
 		outputFile = "output.txt"
 	}
+
+	// Smart path resolution
+	if info, err := os.Stat(outputFile); err == nil && info.IsDir() {
+		ts := time.Now().Format("20060102-150405")
+		outputFile = filepath.Join(outputFile, ts+".txt")
+	} else if err != nil {
+		// Path doesn't exist — ensure parent directory exists
+		if dir := filepath.Dir(outputFile); dir != "." {
+			if err := os.MkdirAll(dir, 0755); err != nil {
+				fmt.Fprintf(os.Stderr, msg("write_failed", err)+"\n")
+				os.Exit(2)
+			}
+		}
+	}
+	// else: path exists and is a file — overwrite directly
 
 	if err := os.WriteFile(outputFile, []byte(sb.String()), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, msg("write_failed", err)+"\n")
