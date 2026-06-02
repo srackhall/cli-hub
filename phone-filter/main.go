@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"os"
+	"strings"
 )
 
 func main() {
@@ -32,8 +34,27 @@ func main() {
 		os.Exit(1)
 	}
 
-	// TODO: main logic — will be filled in subsequent tasks
-	_ = inputFile
+	// Read input
+	var lines []string
+	if *inputFile != "" {
+		data, err := os.ReadFile(*inputFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: failed to read input file: %v\n", err)
+			os.Exit(2)
+		}
+		lines = splitLines(string(data))
+	} else {
+		data, err := io.ReadAll(os.Stdin)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "ERROR: failed to read stdin: %v\n", err)
+			os.Exit(2)
+		}
+		lines = splitLines(string(data))
+	}
+
+	fmt.Fprintf(os.Stderr, "Read %d lines from input.\n", len(lines))
+
+	// TODO: remaining logic — will be filled in subsequent tasks
 	_ = prefixes
 	_ = showDetails
 }
@@ -89,4 +110,15 @@ func outputSchema() {
 	}
 	b, _ := json.MarshalIndent(schema, "", "  ")
 	fmt.Println(string(b))
+}
+
+func splitLines(s string) []string {
+	var result []string
+	for _, line := range strings.Split(s, "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			result = append(result, line)
+		}
+	}
+	return result
 }
