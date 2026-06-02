@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -54,8 +55,19 @@ func main() {
 
 	fmt.Fprintf(os.Stderr, "Read %d lines from input.\n", len(lines))
 
-	// TODO: remaining logic — will be filled in subsequent tasks
-	_ = prefixes
+	validRecords, invalidLines := parseInput(lines)
+	fmt.Fprintf(os.Stderr, "Valid lines: %d, Invalid lines: %d\n", len(validRecords), len(invalidLines))
+
+	groups, err := parsePrefixes(*prefixes)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		os.Exit(1)
+	}
+	matchRecords(validRecords, groups)
+
+	for _, g := range groups {
+		fmt.Fprintf(os.Stderr, "[%s] 有=%d 无=%d total=%d\n", g.Label, g.HaveCount, g.NotCount, len(g.Records))
+	}
 	_ = showDetails
 }
 
@@ -121,4 +133,82 @@ func splitLines(s string) []string {
 		}
 	}
 	return result
+}
+
+var linePattern = regexp.MustCompile(`^(\d{11})----(有|无)$`)
+
+type PhoneRecord struct {
+	Number string
+	Status string // "有" or "无"
+}
+
+type PrefixGroup struct {
+	Prefix    string // the prefix string, or "" for full-data
+	Label     string // display label: prefix string or "全量数据"
+	Records   []PhoneRecord
+	HaveCount int
+	NotCount  int
+}
+
+func parseInput(lines []string) ([]PhoneRecord, []string) {
+	var records []PhoneRecord
+	var invalidLines []string
+
+	for _, line := range lines {
+		m := linePattern.FindStringSubmatch(line)
+		if m != nil {
+			records = append(records, PhoneRecord{Number: m[1], Status: m[2]})
+		} else {
+			invalidLines = append(invalidLines, line)
+		}
+	}
+	return records, invalidLines
+}
+
+func parsePrefixes(raw string) ([]PrefixGroup, error) {
+	segments := strings.Split(raw, ";")
+	var groups []PrefixGroup
+
+	for _, seg := range segments {
+		seg = strings.TrimSpace(seg)
+		if seg == "" {
+			groups = append(groups, PrefixGroup{Prefix: "", Label: "全量数据"})
+			continue
+		}
+		// Validate: must be all digits, max 11
+		for _, c := range seg {
+			if c < '0' || c > '9' {
+				return nil, fmt.Errorf("invalid prefix '%s': contains non-digit character", seg)
+			}
+		}
+		if len(seg) > 11 {
+			return nil, fmt.Errorf("invalid prefix '%s': exceeds 11 digits", seg)
+		}
+		groups = append(groups, PrefixGroup{Prefix: seg, Label: seg})
+	}
+	return groups, nil
+}
+
+func matchRecords(records []PhoneRecord, groups []PrefixGroup) {
+	for i := range groups {
+		g := &groups[i]
+		if g.Prefix == "" {
+			// Full data — match all
+			g.Records = records
+		} else {
+			for _, r := range records {
+				if strings.HasPrefix(r.Number, g.Prefix) {
+					g.Records = append(g.Records, r)
+				}
+			}
+		}
+		// Count
+		for _, r := range g.Records {
+			if r.Status == "有" {
+				g.HaveCount++
+			} else {
+				g.NotCount++
+			}
+		}
+	}
 }
