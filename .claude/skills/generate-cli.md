@@ -304,3 +304,55 @@ When the user describes what the CLI should do:
 4. Write bilingual descriptions for ALL user-facing text (schema fields, runtime output, errors)
 5. Use snake_case JSON field names (`title_zh`, `description_zh`)
 6. Generate complete, compilable Go code as a single `main.go` ready for `go build`
+
+## Build: Makefile
+
+After generating `main.go`, also create a `Makefile` in the same directory. Set the `BINARY` variable to the tool name (same as the `-o` flag in `go build`).
+
+### Makefile Template
+
+```makefile
+BINARY  = <tool-name>
+
+TARGETS = darwin-amd64 darwin-arm64 linux-amd64 linux-arm64 windows-amd64 windows-arm64
+
+# make build — compile for current platform, output to current directory
+.PHONY: build
+build:
+	go build -o $(BINARY) .
+
+# make build-all — cross-compile all 6 platforms to bin/<os>-<arch>/
+.PHONY: build-all
+build-all:
+	@for t in $(TARGETS); do \
+		os=$$(echo $$t | cut -d- -f1); \
+		arch=$$(echo $$t | cut -d- -f2); \
+		out="bin/$$t/$(BINARY)"; \
+		[ "$$os" = "windows" ] && out="$$out.exe"; \
+		echo "→ $$t"; \
+		GOOS=$$os GOARCH=$$arch CGO_ENABLED=0 go build -o "$$out" . ; \
+	done
+
+# make clean — remove bin/ and local binary
+.PHONY: clean
+clean:
+	rm -rf bin $(BINARY)
+```
+
+### Instructions
+
+1. Replace `<tool-name>` with the actual tool name (e.g., `xlsx-extract`, `json-formatter`)
+2. Write this file as `Makefile` in the same directory as `main.go`
+3. After writing, run `make build` to verify compilation succeeds
+4. Run `make build-all` to verify all 6 cross-compile targets produce output
+5. Report both `main.go` and `Makefile` as deliverables
+
+### Key Design Points
+
+| Element | Purpose |
+|---------|--------|
+| `CGO_ENABLED=0` | Static linking — no glibc dependency, works on any Linux |
+| `.PHONY` on every target | Prevents name conflicts with files |
+| `BINARY` variable at top | One-line rename for new tools |
+| `bin/<os>-<arch>/` output | Predictable machine-parseable paths |
+| Windows `.exe` conditional | Standard Windows PE convention |
