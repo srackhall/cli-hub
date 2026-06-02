@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 )
 
 func main() {
@@ -65,10 +67,22 @@ func main() {
 	}
 	matchRecords(validRecords, groups)
 
-	for _, g := range groups {
-		fmt.Fprintf(os.Stderr, "[%s] 有=%d 无=%d total=%d\n", g.Label, g.HaveCount, g.NotCount, len(g.Records))
+	report := generateReport(groups, *showDetails, invalidLines)
+
+	outPath, err := resolveOutputPath(*output)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: %v\n", err)
+		os.Exit(2)
 	}
-	_ = showDetails
+
+	if err := os.WriteFile(outPath, []byte(report), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "ERROR: failed to write output: %v\n", err)
+		os.Exit(2)
+	}
+
+	fmt.Fprintf(os.Stderr, "Report written to: %s\n", outPath)
+	fmt.Printf(`{"status":"ok","output":"报告已生成至 %s"}`, outPath)
+	fmt.Println()
 }
 
 func outputSchema() {
@@ -211,4 +225,80 @@ func matchRecords(records []PhoneRecord, groups []PrefixGroup) {
 			}
 		}
 	}
+}
+
+func generateReport(groups []PrefixGroup, showDetails bool, invalidLines []string) string {
+	var b strings.Builder
+
+	sepLine := "--------------------------------------------------------------------------------------------------------------------------------------------------------------------------"
+
+	for i, g := range groups {
+		if i > 0 {
+			b.WriteString(sepLine + "\n")
+		}
+
+		total := len(g.Records)
+
+		b.WriteString(sepLine + "\n\n")
+		b.WriteString(fmt.Sprintf(">>>>开始>>>>%s\n\n", g.Label))
+
+		// 有 count
+		b.WriteString(fmt.Sprintf("%s----有  =  %d  (个)\n", g.Label, g.HaveCount))
+		if showDetails {
+			for _, r := range g.Records {
+				if r.Status == "有" {
+					b.WriteString(fmt.Sprintf("* %s----有\n", r.Number))
+				}
+			}
+		}
+
+		// 无 count
+		b.WriteString(fmt.Sprintf("%s----无  =  %d  (个)\n", g.Label, g.NotCount))
+		if showDetails {
+			for _, r := range g.Records {
+				if r.Status == "无" {
+					b.WriteString(fmt.Sprintf("* %s----无\n", r.Number))
+				}
+			}
+		}
+
+		// Percentages
+		havePct := 0.0
+		notPct := 0.0
+		if total > 0 {
+			havePct = float64(g.HaveCount) / float64(total) * 100
+			notPct = float64(g.NotCount) / float64(total) * 100
+		}
+		b.WriteString(fmt.Sprintf("\n%s----有  =  占比为 %.2f%%\n", g.Label, havePct))
+		b.WriteString(fmt.Sprintf("%s----无  =  占比为 %.2f%%\n", g.Label, notPct))
+
+		b.WriteString(fmt.Sprintf("\n<<<<结束<<<<%s\n", g.Label))
+	}
+
+	// Data quality reminder
+	if len(invalidLines) > 0 {
+		b.WriteString("\n========== 数据质量提醒 ==========\n")
+		b.WriteString(fmt.Sprintf("以下 %d 行不符合 `11位数字----有/无` 格式，已忽略：\n", len(invalidLines)))
+		for _, line := range invalidLines {
+			b.WriteString(fmt.Sprintf("* %s\n", line))
+		}
+	}
+
+	return b.String()
+}
+
+func resolveOutputPath(output string) (string, error) {
+	info, err := os.Stat(output)
+	if err == nil && !info.IsDir() {
+		// It's a file — use directly
+		return output, nil
+	}
+	// It's a directory (or doesn't exist — treat as dir and create)
+	if err != nil {
+		if err2 := os.MkdirAll(output, 0755); err2 != nil {
+			return "", fmt.Errorf("failed to create output directory: %w", err2)
+		}
+	}
+	filename := time.Now().Format("20060102150405") + ".txt"
+	return filepath.Join(output, filename), nil
 }
