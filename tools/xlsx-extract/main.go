@@ -102,8 +102,8 @@ func getSchema() map[string]any {
 			},
 			"output": map[string]any{
 				"type":        "string",
-				"description": "Output file or directory path. If a directory, a timestamped .txt file is created inside (e.g. 20260602-143025.txt).",
-				"description_zh": "输出文件或目录路径。若为目录则自动生成时间戳 .txt 文件（如 20260602-143025.txt）。",
+				"description": "Output file or directory path. If a directory, a timestamped .txt file is created inside (e.g. 20260602-143025.000.txt).",
+				"description_zh": "输出文件或目录路径。若为目录则自动生成时间戳 .txt 文件（如 20260602-143025.000.txt）。",
 				"format":      "file-path",
 			},
 			"key-col": map[string]any{

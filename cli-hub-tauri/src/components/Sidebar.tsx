@@ -155,13 +155,20 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
           {/* Menu */}
           <div
             className="fixed z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[120px]"
-            style={{ left: contextMenu.x, top: contextMenu.y }}
+            style={{
+              left: Math.min(contextMenu.x, window.innerWidth - 130),
+              top: Math.min(contextMenu.y, window.innerHeight - 40),
+            }}
           >
             <button
               className="w-full text-left px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
               onClick={() => {
+                const confirmed = window.confirm(t("dialog.deleteConfirm", { name: contextMenu.toolName }))
                 setContextMenu(null)
-                handleDelete(contextMenu.toolName)
+                if (!confirmed) return
+                api.deleteTool(contextMenu.toolName).then(() => onRefreshTools()).catch((err: unknown) => {
+                  console.error("删除失败:", err)
+                })
               }}
             >
               <Trash2 className="h-3 w-3" />
