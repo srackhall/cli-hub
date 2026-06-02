@@ -21,6 +21,11 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
   const isZh = i18n.language.startsWith("zh")
   const [search, setSearch] = useState("")
   const [importing, setImporting] = useState(false)
+  const [contextMenu, setContextMenu] = useState<{
+    toolName: string
+    x: number
+    y: number
+  } | null>(null)
 
   const filtered = tools.filter((t) =>
     t.name.toLowerCase().includes(search.toLowerCase())
@@ -111,6 +116,10 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
               role="button"
               tabIndex={0}
               onKeyDown={(e) => { if (e.key === "Enter") onSelectTool(tool.name) }}
+              onContextMenu={(e) => {
+                e.preventDefault()
+                setContextMenu({ toolName: tool.name, x: e.clientX, y: e.clientY })
+              }}
             >
               <Box className={`h-3.5 w-3.5 shrink-0 transition-colors duration-150 ${isSelected ? "text-accent" : "text-muted-foreground/60"}`} />
               <div className="truncate flex-1 min-w-0">
@@ -126,18 +135,6 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
                   {t("sidebar.error")}
                 </Badge>
               )}
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDelete(tool.name)
-                }}
-                title={t("sidebar.delete")}
-              >
-                <Trash2 className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-destructive transition-colors" />
-              </Button>
             </div>
           )})}
           {filtered.length === 0 && (
@@ -147,6 +144,32 @@ export function Sidebar({ width, tools, selectedTool, onSelectTool, onRefreshToo
           )}
         </div>
       </ScrollArea>
+      {contextMenu && (
+        <>
+          {/* Backdrop to close on click outside */}
+          <div
+            className="fixed inset-0 z-50"
+            onClick={() => setContextMenu(null)}
+            onContextMenu={(e) => { e.preventDefault(); setContextMenu(null) }}
+          />
+          {/* Menu */}
+          <div
+            className="fixed z-50 bg-popover border border-border rounded-md shadow-md py-1 min-w-[120px]"
+            style={{ left: contextMenu.x, top: contextMenu.y }}
+          >
+            <button
+              className="w-full text-left px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10 transition-colors flex items-center gap-2"
+              onClick={() => {
+                setContextMenu(null)
+                handleDelete(contextMenu.toolName)
+              }}
+            >
+              <Trash2 className="h-3 w-3" />
+              {t("sidebar.delete")}
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }
