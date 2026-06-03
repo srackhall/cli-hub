@@ -181,6 +181,10 @@ func parseInput(lines []string) ([]PhoneRecord, []string) {
 
 func parsePrefixes(raw string) ([]PrefixGroup, error) {
 	segments := strings.Split(raw, ";")
+	// Drop trailing empty segment from final terminator ";"
+	if len(segments) > 0 && segments[len(segments)-1] == "" {
+		segments = segments[:len(segments)-1]
+	}
 	var groups []PrefixGroup
 
 	for _, seg := range segments {
@@ -288,16 +292,13 @@ func generateReport(groups []PrefixGroup, showDetails bool, invalidLines []strin
 }
 
 func resolveOutputPath(output string) (string, error) {
-	info, err := os.Stat(output)
-	if err == nil && !info.IsDir() {
-		// It's a file — use directly
+	// If path ends with .txt, treat as a specific file — use directly
+	if strings.HasSuffix(output, ".txt") {
 		return output, nil
 	}
-	// It's a directory (or doesn't exist — treat as dir and create)
-	if err != nil {
-		if err2 := os.MkdirAll(output, 0755); err2 != nil {
-			return "", fmt.Errorf("failed to create output directory: %w", err2)
-		}
+	// Treat as directory — create if needed, then generate timestamped filename
+	if err := os.MkdirAll(output, 0755); err != nil {
+		return "", fmt.Errorf("failed to create output directory: %w", err)
 	}
 	filename := time.Now().Format("20060102150405") + ".txt"
 	return filepath.Join(output, filename), nil
