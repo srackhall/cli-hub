@@ -20,6 +20,10 @@ func main() {
 	showDetails := flag.Bool("show-details", false, "Include matched detail lines in report")
 	output := flag.String("output", "", "Output path: directory → timestamped file; file → overwrite")
 
+	// Filter out -lang/--lang flags that CLI Hub injects
+	filteredArgs := filterLangFlag(os.Args[1:])
+	os.Args = append([]string{os.Args[0]}, filteredArgs...)
+
 	flag.Parse()
 
 	if *schemaFlag {
@@ -147,6 +151,25 @@ func splitLines(s string) []string {
 		}
 	}
 	return result
+}
+
+// filterLangFlag removes --lang and -lang flags (and their values) injected by CLI Hub
+func filterLangFlag(args []string) []string {
+	var filtered []string
+	for i := 0; i < len(args); i++ {
+		a := args[i]
+		if a == "--lang" || a == "-lang" {
+			if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
+				i++ // skip value
+			}
+			continue
+		}
+		if strings.HasPrefix(a, "--lang=") || strings.HasPrefix(a, "-lang=") {
+			continue
+		}
+		filtered = append(filtered, a)
+	}
+	return filtered
 }
 
 var linePattern = regexp.MustCompile(`^(\d{11})----(有|无)$`)
